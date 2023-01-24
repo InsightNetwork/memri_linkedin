@@ -6,8 +6,10 @@ from MemriGraph import MemriGraph
 
 class LinkedInGraph(MemriGraph):
     class Person(ItemBase):
-        username: Optional[str] = None
-        fullname: Optional[str] = None
+        id: Optional[str] = None
+        key: str
+        username: str
+        fullname: str
         location: Optional[str] = None
         description: Optional[str] = None
 
@@ -20,9 +22,27 @@ class LinkedInGraph(MemriGraph):
         self.client.api.create_item(
             {
                 "type": "ItemEdgeSchema",
-                "edgeName": "link",
-                "sourceType": "LinkedInGraph.Person",
-                "targetType": "LinkedInGraph.Person",
+                "edgeName": "VOUCHES_FOR",
+                "sourceType": "Person",
+                "targetType": "Person",
+            }
+        )
+
+        self.client.api.create_item(
+            {
+                "type": "ItemEdgeSchema",
+                "edgeName": "LI",
+                "sourceType": "Person",
+                "targetType": "Person",
+            }
+        )
+
+        self.client.api.create_item(
+            {
+                "type": "ItemEdgeSchema",
+                "edgeName": "CLAIM",
+                "sourceType": "Person",
+                "targetType": "Person",
             }
         )
 
