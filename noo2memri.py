@@ -4,7 +4,7 @@ from typing import List
 from LinkedInGraph import LinkedInGraph
 
 
-def main(file: str):
+def main(file: str, owner_key: str, database_key: str):
     persons: List["LinkedInGraph.Person"] = []
     links: List["LinkedInGraph.Link"] = []
 
@@ -15,7 +15,7 @@ def main(file: str):
         for i in m["result"][0]["profiles"]:
             persons.append(
                 LinkedInGraph.Person(
-                    key=i["_id"],
+                    externalId=i["_id"],
                     username=i["data"]["profile"]["username"],
                     fullname=i["data"]["profile"]["fullname"],
                     location=i["data"]["profile"].get("loc"),
@@ -24,8 +24,8 @@ def main(file: str):
             )
 
         for i in m["result"][0]["edges"]:
-            p1 = list(filter(lambda x: x.key == i[0], persons))
-            p2 = list(filter(lambda x: x.key == i[1], persons))
+            p1 = list(filter(lambda x: x.externalId == i[0], persons))
+            p2 = list(filter(lambda x: x.externalId == i[1], persons))
 
             if p1 and p2:
                 links.append(
@@ -36,12 +36,15 @@ def main(file: str):
                     )
                 )
 
-    graph = LinkedInGraph()
+    graph = LinkedInGraph(owner_key=owner_key, database_key=database_key)
     graph.bulk_create(persons=persons, links=links)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="JSON -> memri tool")
-    parser.add_argument("-f", "--file", type=str, required=True, help="JSON file name")
+    parser.add_argument("-f", "--file", type=str, required=True,
+                        help="JSON file name")
+    parser.add_argument("--owner_key", type=str, required=True)
+    parser.add_argument("--database_key", type=str, required=True)
     args = parser.parse_args()
     main(**args.__dict__)

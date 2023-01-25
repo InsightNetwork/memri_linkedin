@@ -1,13 +1,10 @@
-from pymemri.data.schema import Edge
-from pymemri.data.schema.itembase import ItemBase
+from pymemri.data.schema import Edge, Item
 from typing import List, Optional
 from MemriGraph import MemriGraph
 
 
 class LinkedInGraph(MemriGraph):
-    class Person(ItemBase):
-        id: Optional[str] = None
-        key: str
+    class Person(Item):
         username: str
         fullname: str
         location: Optional[str] = None
@@ -52,3 +49,21 @@ class LinkedInGraph(MemriGraph):
         links: List["LinkedInGraph.Link"],
     ):
         self.client.bulk_action(create_items=persons, create_edges=links)
+
+    def get_persons(self) -> List["LinkedInGraph.Person"]:
+        return self.client.search({"type": "Person"}, include_edges=False)
+
+    def get_links(self, persons: List["LinkedInGraph.Person"]
+                  ) -> List["LinkedInGraph.Link"]:
+        links = []
+
+        for i in persons:
+            person_links = self.client.get_edges(i.id)
+            for j in person_links:
+                links.append(LinkedInGraph.Link(
+                    i,
+                    j["item"],
+                    j["name"]
+                ))
+
+        return links
