@@ -12,8 +12,8 @@ def main(file: str, owner_key: str, database_key: str):
 
     data = {
         "nodes": [i.to_json() for i in persons],
-        "links": [{"source": i.source.id, "target": i.target.id, "type": i.name}
-                  for i in links],
+        "links": [{"source": i.source.id, "target": i.target.id,
+                   "type": i.name} for i in links],
     }
 
     with open(file, "w") as f:
