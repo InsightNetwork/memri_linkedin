@@ -5,8 +5,8 @@ from LinkedInGraph import LinkedInGraph
 
 
 def main(file: str, owner_key: str, database_key: str):
-    persons: List["LinkedInGraph.Person"] = []
-    links: List["LinkedInGraph.Link"] = []
+    persons: List["LinkedInGraph.NooPerson"] = []
+    links: List["LinkedInGraph.NooLink"] = []
 
     with open(file) as f:
         sdata = f.read()
@@ -14,7 +14,7 @@ def main(file: str, owner_key: str, database_key: str):
 
         for i in m["result"][0]["profiles"]:
             persons.append(
-                LinkedInGraph.Person(
+                LinkedInGraph.NooPerson(
                     externalId=i["_id"],
                     username=i["data"]["profile"]["username"],
                     fullname=i["data"]["profile"]["fullname"],
@@ -29,7 +29,7 @@ def main(file: str, owner_key: str, database_key: str):
 
             if p1 and p2:
                 links.append(
-                    LinkedInGraph.Link(
+                    LinkedInGraph.NooLink(
                         p1[0],
                         p2[0],
                         i[2],

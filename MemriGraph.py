@@ -20,8 +20,5 @@ class MemriGraph:
                 database_key=self._database_key,
                 create_account=self._create_account,
             )
-
-            if self._create_account:
-                self.setup_schema()
-
+            self.setup_schema()
         return self._client

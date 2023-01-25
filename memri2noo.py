@@ -11,8 +11,8 @@ def main(file: str, owner_key: str, database_key: str):
     links = graph.get_links(persons)
 
     data = {
-        "persons": [i.to_json() for i in persons],
-        "links": [{"from": i.source.id, "to": i.target.id, "name": i.name}
+        "nodes": [i.to_json() for i in persons],
+        "links": [{"source": i.source.id, "target": i.target.id, "type": i.name}
                   for i in links],
     }
 
