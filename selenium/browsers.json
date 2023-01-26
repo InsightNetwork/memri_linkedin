@@ -1,0 +1,29 @@
+{
+    "firefox": {
+        "default": "46.0",
+        "versions": {
+            "46.0": {
+              "image": "selenoid/firefox:46.0",
+              "port": "4444",
+              "path" : "/wd/hub",
+              "shmSize" : 268435456,
+              "cpu" : "1.0",
+              "mem" : "512m"
+            }
+        }
+    },
+
+    "chrome": {
+        "default": "latest",
+        "versions": {
+            "latest": {
+                "image": "selenoid/chrome:latest",
+                "port": "4444",
+                "path": "/",
+                "shmSize" : 536870912,
+                "cpu" : "1.0",
+                "mem" : "512m"
+            }
+        }
+    }
+}
