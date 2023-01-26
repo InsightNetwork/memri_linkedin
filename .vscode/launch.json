@@ -12,10 +12,10 @@
             "console": "integratedTerminal",
             "justMyCode": false,
             "env": {
-                "PYTHONPATH": "${workspaceFolder}",
+                "PYTHONPATH": "${workspaceFolder}/vis",
             },
             "args": [
-                "--file=./data/IlyaRadinsky.json", "--owner_key=111", "--database_key=222"
+                "--file=../vis/data/IlyaRadinsky.json", "--owner_key=111", "--database_key=222"
             ]
         },
         {
@@ -26,10 +26,10 @@
             "console": "integratedTerminal",
             "justMyCode": false,
             "env": {
-                "PYTHONPATH": "${workspaceFolder}",
+                "PYTHONPATH": "${workspaceFolder}/vis",
             },
             "args": [
-                "--file=./data/memri.json", "--owner_key=111", "--database_key=222"
+                "--file=../vis/data/memri.json", "--owner_key=111", "--database_key=222"
             ]
         }
     ]

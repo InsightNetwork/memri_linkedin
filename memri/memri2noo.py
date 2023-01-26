@@ -1,6 +1,10 @@
 import argparse
 import json
+import os
 from LinkedInGraph import LinkedInGraph
+
+
+ROOT = os.path.dirname(__file__)
 
 
 def main(file: str, owner_key: str, database_key: str):
@@ -16,7 +20,7 @@ def main(file: str, owner_key: str, database_key: str):
                    "type": i.name} for i in links],
     }
 
-    with open(file, "w") as f:
+    with open(os.path.join(ROOT, file), "w") as f:
         sdata = json.dumps(data)
         f.write(sdata)
 

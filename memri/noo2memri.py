@@ -1,14 +1,18 @@
 import argparse
 import json
+import os
 from typing import List
 from LinkedInGraph import LinkedInGraph
+
+
+ROOT = os.path.dirname(__file__)
 
 
 def main(file: str, owner_key: str, database_key: str):
     persons: List["LinkedInGraph.NooPerson"] = []
     links: List["LinkedInGraph.NooLink"] = []
 
-    with open(file) as f:
+    with open(os.path.join(ROOT, file)) as f:
         sdata = f.read()
         m = json.loads(sdata)
 
