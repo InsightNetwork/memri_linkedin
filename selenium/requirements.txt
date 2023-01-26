@@ -1,2 +1,2 @@
-selenium==3.141.0
-user-agent==0.1.9
+selenium==4.8.0
+user-agent==0.1.10
