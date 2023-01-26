@@ -31,6 +31,17 @@
             "args": [
                 "--file=../vis/data/memri.json", "--owner_key=111", "--database_key=222"
             ]
+        },
+        {
+            "name": "LinkedIn Client",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/selenium",
+            }
         }
     ]
 }

@@ -17,8 +17,8 @@ default_capabilities = {
 
 
 class SeleniumClient:
-    def __init__(self, desired_capabilities: Dict, log: Any = logging):
-        self.driver = webdriver.Chrome()#(desired_capabilities=desired_capabilities)
+    def __init__(self, log: Any = logging):
+        self.driver = webdriver.Chrome()
         self.log = log
 
     def __del__(self):
