@@ -26,7 +26,8 @@ async def index(request: Request):
 
 app = Starlette(debug=DEBUG, routes=[
     Route('/', index, methods=['GET']),
-    Mount('/', app=StaticFiles(directory=STATIC_ROOT, html=True), name="index"),
+    Mount('/', app=StaticFiles(directory=STATIC_ROOT, html=True),
+          name="index"),
 ])
 
 
