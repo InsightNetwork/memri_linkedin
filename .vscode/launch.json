@@ -42,6 +42,20 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/selenium",
             }
+        },
+        {
+            "name": "VIS",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src",
+            },
+            "args": [
+                "serve"
+            ]
         }
     ]
 }

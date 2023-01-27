@@ -1,6 +1,6 @@
 from pymemri.data.schema import Edge, Item
 from typing import List, Optional
-from MemriGraph import MemriGraph
+from memri.MemriGraph import MemriGraph
 
 
 class LinkedInGraph(MemriGraph):

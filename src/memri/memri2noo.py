@@ -1,7 +1,7 @@
 import argparse
 import json
 import os
-from LinkedInGraph import LinkedInGraph
+from memri.LinkedInGraph import LinkedInGraph
 
 
 ROOT = os.path.dirname(__file__)
