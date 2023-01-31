@@ -5,6 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "noo2memri",
             "type": "python",
             "request": "launch",
@@ -15,7 +23,9 @@
                 "PYTHONPATH": "${workspaceFolder}/src",
             },
             "args": [
-                "--file=../../data/IlyaRadinsky.json", "--owner_key=111", "--database_key=222"
+                "--file=../../data/IlyaRadinsky.json",
+                "--owner_key=111",
+                "--database_key=222"
             ]
         },
         {
@@ -29,7 +39,9 @@
                 "PYTHONPATH": "${workspaceFolder}/vis",
             },
             "args": [
-                "--file=../../data/memri.json", "--owner_key=111", "--database_key=222"
+                "--file=../../data/memri.json",
+                "--owner_key=111",
+                "--database_key=222"
             ]
         },
         {
