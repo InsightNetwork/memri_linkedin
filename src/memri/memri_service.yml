@@ -19,6 +19,9 @@ services:
       - "--insecure-non-tls=0.0.0.0"
       - "--plugins-callback-address=http://pod:3030"
       - "--plugins-docker-network=pod_memri-net"
+    environment:
+      TWITTER_V2_CLIENT_ID: ${TWITTER_V2_CLIENT_ID}
+      TWITTER_V2_CLIENT_SECRET: ${TWITTER_V2_CLIENT_SECRET}
 
 networks:
   memri-net:
