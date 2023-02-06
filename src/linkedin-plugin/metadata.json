@@ -1,0 +1,8 @@
+{
+	"containerImage": "localhost:2000/twitter",
+	"pluginModule": "linkedin.plugin",
+	"plugin": "linkedin.LinkedinPlugin",
+	"pluginName": "LinkedinPlugin",
+	"status": "not started",
+	"config": "{\"callback_url\": \"http://localhost:4000\"}"
+}

@@ -1,0 +1,54 @@
+stages:
+  - test
+  - build
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  
+cache:
+  paths:
+    - .cache/pip
+
+default: 
+  image: python:3.9
+  before_script:
+  - pip install .[dev]
+
+run tests:
+  stage: test
+  services:
+    - name: ${POD_IMAGE}
+      alias: pod
+      entrypoint:
+        - "/pod"
+        - "--owners=ANY"
+        - "--insecure-non-tls=0.0.0.0"
+  script:
+  - curl http://pod:3030/version
+  - export POD_ADDRESS='http://pod:3030'
+  - pre-commit run --all-files
+  - pytest -s
+
+build_image:
+  only:
+    - dev
+    - qa
+    - uat
+    - prod
+    - /release*/
+  stage: build
+  tags:
+    - internal-memri
+  before_script:
+    - echo building twitter image
+  image: 
+        # We recommend using the CERN version of the Kaniko image: gitlab-registry.cern.ch/ci-tools/docker-image-builder
+        name: gcr.io/kaniko-project/executor:debug
+        entrypoint: [""]
+  script:
+        # Prepare Kaniko configuration file
+        - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+        - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-latest
+
+
+
