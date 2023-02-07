@@ -8,6 +8,7 @@ from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 from memri.LinkedInGraph import LinkedInGraph
+from linkedin.LinkedInClient import LinkedInClient
 
 
 ROOT = os.path.dirname(__file__)
@@ -24,6 +25,8 @@ html_templates = Jinja2Templates(directory=STATIC_ROOT)
 
 graph = LinkedInGraph(owner_key=OWNER_KEY, database_key=DATABASE_KEY,
                       create_account=False)
+
+linkedin = LinkedInClient()
 
 
 async def get_index(request: Request):
@@ -45,6 +48,38 @@ async def get_graph(request: Request):
     return JSONResponse(data)
 
 
+async def create_session(request: Request):
+    params = await request.json()
+    email = params.get("login")
+    password = params.get("password")
+
+    linkedin.goto_main_page()
+    linkedin.enter_password(email, password)
+
+    data = {
+        'session_id': linkedin.driver.session_id,
+    }
+
+    return JSONResponse(data)
+
+
+async def update_session(request: Request):
+    params = await request.json()
+    pin = params.get("pin")
+    session_id = params.get("session_id")
+
+    if session_id:
+        linkedin.driver.session_id = session_id
+
+    linkedin.enter_pin(pin)
+
+    data = {
+        'session_id': linkedin.driver.session_id,
+    }
+
+    return JSONResponse(data)
+
+
 def startup():
     print('Ready to go')
 
@@ -52,6 +87,8 @@ def startup():
 app = Starlette(
     debug=DEBUG,
     routes=[
+        Route('/session', create_session, methods=['POST']),
+        Route('/session', update_session, methods=['PUT']),
         Route('/graph', get_graph, methods=['GET']),
         Route('/', get_index, methods=['GET']),
         Mount('/', app=StaticFiles(directory=STATIC_ROOT, html=True),
