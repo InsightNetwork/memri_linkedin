@@ -26,8 +26,20 @@
             const [password, setPassword] = useState("");
 
             const onSignIn = () => {
-                console.log(`onSignIn: ${login} ${password}`);
-                onSignedIn();
+                fetch('session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        login,
+                        password,
+                    }),
+                })
+                .then(response => response.json())
+                .then(json => {
+                    onSignedIn(json);
+                });
             }
 
             return html`
@@ -60,8 +72,7 @@
         }
 
         const App = () => {
-            const onSignedIn = () => {
-                console.log("onSignedIn");
+            const onSignedIn = ({ session }) => {
             }
 
             return html`

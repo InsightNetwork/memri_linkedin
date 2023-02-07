@@ -74,7 +74,7 @@ async def update_session(request: Request):
     linkedin.enter_pin(pin)
 
     data = {
-        'session_id': linkedin.driver.session_id,
+        'session': linkedin.driver.session_id,
     }
 
     return JSONResponse(data)
