@@ -21,13 +21,10 @@ default_capabilities = {
 }
 
 
-class SeleniumClient:
-    def __init__(self, log: Any = logging, session_id: str = None):
+class LinkedInClient:
+    def __init__(self, log: Any = logging):
         self.driver = webdriver.Chrome()
         self.log = log
-
-        if session_id:
-            self.driver.session_id = session_id
 
     def __del__(self):
         self.driver.close()
@@ -142,7 +139,7 @@ def main(log_level="INFO"):
         format="%(asctime)s %(levelname)-5s %(name)s (%(module)s-%(lineno)s): %(message)s",
     )
 
-    client = SeleniumClient()
+    client = LinkedInClient()
     client.goto_main_page()
     client.login()
     client.get_my_connections()
