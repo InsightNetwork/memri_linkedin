@@ -5,6 +5,7 @@
     <style>
         body {
             margin: 0;
+            padding: 22px;
         }
 
         div.header {
@@ -17,13 +18,68 @@
     <script src="//unpkg.com/three-spritetext"></script>
     <script src="./utils.js"></script>
 
-    <!--  <script src="../../dist/3d-force-graph.js"></script>-->
+    <script type="module">
+        import { html, render, useState } from 'https://unpkg.com/htm/preact/standalone.module.js';
+
+        const SignInForm = ({ onSignedIn }) => {
+            const [login, setLogin] = useState("");
+            const [password, setPassword] = useState("");
+
+            const onSignIn = () => {
+                console.log(`onSignIn: ${login} ${password}`);
+                onSignedIn();
+            }
+
+            return html`
+                <div>
+                    <input
+                        autocomplete="username"
+                        id="session_key"
+                        name="session_key"
+                        onChange=${({target: { value }}) => setLogin(value)}
+                        placeholder="Email or phone number"
+                        required="true"
+                        size="30"
+                        type="text"
+                        value=${login}
+                    />
+                    <input
+                        autocomplete="current-password"
+                        id="session_password"
+                        name="session_password"
+                        onChange=${({target: { value }}) => setPassword(value)}
+                        placeholder="Password"
+                        required="true"
+                        size="30"
+                        type="password"
+                        value=${password}
+                    />
+                    <button onClick=${onSignIn}>Sign in</button>
+                </div>
+            `;
+        }
+
+        const App = () => {
+            const onSignedIn = () => {
+                console.log("onSignedIn");
+            }
+
+            return html`
+                <div class="app">
+                    <${SignInForm} onSignedIn=${onSignedIn} />
+                </div>
+            `;
+        }
+
+        render(html`<${App} />`, document.getElementById("app"));
+    </script>
 </head>
 
 
 
 <body>
-    <div id="3d-graph"></div>
+    <div id="app" />
+    <div id="3d-graph" />
 
     <script>
         function color_me(node) {
