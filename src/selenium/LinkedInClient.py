@@ -22,20 +22,17 @@ default_capabilities = {
 
 
 class SeleniumClient:
-    def __init__(self, log: Any = logging):
+    def __init__(self, log: Any = logging, session_id: str = None):
         self.driver = webdriver.Chrome()
         self.log = log
 
+        if session_id:
+            self.driver.session_id = session_id
+
     def __del__(self):
-        self.driver.quit()
+        self.driver.close()
 
-    def login(self, use_verification_pin=True):
-        self.driver.get("https://www.linkedin.com/")
-        self.driver.set_window_size(1428, 755)
-
-        email = input("Email: ")
-        password = getpass.getpass("Password: ")
-
+    def enter_password(self, email: str, password: str):
         self.driver.find_element(By.ID, "session_key").click()
         self.driver.find_element(By.ID, "session_key").send_keys(email)
         self.driver.find_element(By.ID, "session_password").click()
@@ -45,12 +42,25 @@ class SeleniumClient:
             By.CSS_SELECTOR, ".sign-in-form__submit-button"
         ).click()
 
+    def enter_pin(self, pin: str):
+        self.driver.find_element(By.ID, "input__phone_verification_pin").send_keys(
+            pin
+        )
+        self.driver.find_element(By.ID, "two-step-submit-button").click()
+
+    def goto_main_page(self):
+        self.driver.get("https://www.linkedin.com/")
+        self.driver.set_window_size(1428, 755)
+
+    def login(self, use_verification_pin=True):
+        email = input("Email: ")
+        password = getpass.getpass("Password: ")
+
+        self.enter_password(email, password)
+
         if use_verification_pin:
             pin = input("Pin: ")
-            self.driver.find_element(By.ID, "input__phone_verification_pin").send_keys(
-                pin
-            )
-            self.driver.find_element(By.ID, "two-step-submit-button").click()
+            self.enter_pin(pin)
 
     def simulate_pause(self, start=5, end=8):
         time.sleep(randint(start, end))
@@ -133,6 +143,7 @@ def main(log_level="INFO"):
     )
 
     client = SeleniumClient()
+    client.goto_main_page()
     client.login()
     client.get_my_connections()
 
