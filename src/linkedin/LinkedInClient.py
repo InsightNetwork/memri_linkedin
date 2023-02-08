@@ -132,6 +132,24 @@ class LinkedInClient:
             logging.error("Getting connections")
         return profiles
 
+    def get_my_profile(self):
+        profile = {}
+        try:
+            profile_block = self.driver.find_element(By.CLASS_NAME, "feed-identity-module__actor-meta")
+            fullname = profile_block.find_element(By.XPATH, "a/div[2]").get_attribute("innerHTML").strip()
+            occupation = profile_block.find_element(By.XPATH, "p").get_attribute("innerHTML").strip()
+
+            profile = {
+                'fullname': fullname,
+                'occupation': occupation,
+            }
+        except:
+            logging.error("Getting profile")
+
+        logging.info(f"Found profile: {str(profile)}")
+
+        return profile
+
 
 def main(log_level="INFO"):
     logging.basicConfig(
@@ -142,7 +160,9 @@ def main(log_level="INFO"):
     client = LinkedInClient()
     client.goto_main_page()
     client.login()
-    client.get_my_connections()
+    client.simulate_pause(2, 3)
+    client.get_my_profile()
+    #client.get_my_connections()
 
 
 if __name__ == "__main__":
