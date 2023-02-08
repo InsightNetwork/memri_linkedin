@@ -7,11 +7,6 @@
             margin: 0;
             padding: 22px;
         }
-
-        div.header {
-            margin: 10;
-            padding-left: 10px;
-        }
     </style>
     <script src="//unpkg.com/three"></script>
     <script src="//unpkg.com/3d-force-graph"></script>
@@ -20,6 +15,11 @@
 
     <script type="module">
         import { html, render, useState } from 'https://unpkg.com/htm/preact/standalone.module.js';
+
+        const STATE_SIGN_IN = 1;
+        const STATE_ENTER_PIN = 2;
+        const STATE_LOGGED_IN = 3;
+
 
         const SignInForm = ({ onSignedIn }) => {
             const [login, setLogin] = useState("");
@@ -46,8 +46,6 @@
                 <div>
                     <input
                         autocomplete="username"
-                        id="session_key"
-                        name="session_key"
                         onChange=${({target: { value }}) => setLogin(value)}
                         placeholder="Email or phone number"
                         required="true"
@@ -57,8 +55,6 @@
                     />
                     <input
                         autocomplete="current-password"
-                        id="session_password"
-                        name="session_password"
                         onChange=${({target: { value }}) => setPassword(value)}
                         placeholder="Password"
                         required="true"
@@ -71,14 +67,85 @@
             `;
         }
 
-        const App = () => {
-            const onSignedIn = ({ session }) => {
+
+        const PinForm = ({ onSubmitted, session }) => {
+            const [pin, setPin] = useState("");
+
+            const onSubmit = () => {
+                fetch('session', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        pin,
+                        session,
+                    }),
+                })
+                .then(response => response.json())
+                .then(json => {
+                    onSubmitted(json);
+                });
             }
 
             return html`
-                <div class="app">
-                    <${SignInForm} onSignedIn=${onSignedIn} />
+                <div>
+                    <h3>
+                        Enter the code you see on your authenticator app
+                    </h3>
+                    <input
+                        autocomplete="off"
+                        autocorrect="off"
+                        onChange=${({target: { value }}) => setPin(value)}
+                        placeholder="Password"
+                        required="true"
+                        size="30"
+                        type="password"
+                        value=${pin}
+                        maxlength="6"
+                        type="tel"
+                        pattern="[0-9]*"
+                    />
+                    <button onClick=${onSubmit}>Sign in</button>
                 </div>
+            `;
+        }
+
+
+        const LoggedInForm = ({ session }) => html`
+            <div>
+                <h3>
+                    Logged in, session ${session}
+                </h3>
+            </div>
+        `;
+
+
+        const App = () => {
+            const [state, setState] = useState(STATE_SIGN_IN);
+            const [sessionId, setSessionId] = useState("");
+
+            const onSignedIn = ({ session }) => {
+                setSessionId(session);
+                setState(STATE_ENTER_PIN);
+            };
+
+            const onPinSubmitted = () => {
+                setState(STATE_LOGGED_IN);
+            };
+
+            if (state === STATE_SIGN_IN) {
+                return html`
+                    <${SignInForm} onSignedIn=${onSignedIn} />
+                `;
+            } else if (state === STATE_ENTER_PIN) {
+                return html`
+                     <${PinForm} onSubmitted=${onPinSubmitted} session=${sessionId} />
+                `;
+            }
+
+            return html`
+                <${LoggedInForm} session=${sessionId} />
             `;
         }
 
