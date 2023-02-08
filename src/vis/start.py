@@ -49,11 +49,24 @@ async def get_graph(request: Request):
 
 
 async def create_session(request: Request):
+    linkedin.goto_main_page()
+
+    data = {
+        'session': linkedin.driver.session_id,
+    }
+
+    return JSONResponse(data)
+
+
+async def session_password(request: Request):
     params = await request.json()
     email = params.get("login")
     password = params.get("password")
+    session_id = params.get("session")
 
-    linkedin.goto_main_page()
+    if session_id:
+        linkedin.driver.session_id = session_id
+
     linkedin.enter_password(email, password)
 
     data = {
@@ -63,10 +76,10 @@ async def create_session(request: Request):
     return JSONResponse(data)
 
 
-async def update_session(request: Request):
+async def session_pin(request: Request):
     params = await request.json()
     pin = params.get("pin")
-    session_id = params.get("session_id")
+    session_id = params.get("session")
 
     if session_id:
         linkedin.driver.session_id = session_id
@@ -88,7 +101,8 @@ app = Starlette(
     debug=DEBUG,
     routes=[
         Route('/session', create_session, methods=['POST']),
-        Route('/session', update_session, methods=['PUT']),
+        Route('/session/password', session_password, methods=['PUT']),
+        Route('/session/pin', session_pin, methods=['PUT']),
         Route('/graph', get_graph, methods=['GET']),
         Route('/', get_index, methods=['GET']),
         Mount('/', app=StaticFiles(directory=STATIC_ROOT, html=True),

@@ -14,14 +14,39 @@
     <script src="./utils.js"></script>
 
     <script type="module">
-        import { html, render, useState } from 'https://unpkg.com/htm/preact/standalone.module.js';
+        import { html, render, useEffect, useState } from 'https://unpkg.com/htm/preact/standalone.module.js';
 
+        const STATE_INIT = 0;
         const STATE_SIGN_IN = 1;
         const STATE_ENTER_PIN = 2;
         const STATE_LOGGED_IN = 3;
 
 
-        const SignInForm = ({ onSignedIn }) => {
+        const InitForm = ({ onInit }) => {
+            useEffect(async () => {
+                const response = await fetch('session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({}),
+                });
+
+                const data = await response.json();
+
+                onInit(data);
+            }, []);
+
+            return html`
+                <div>
+                    <h3>
+                        Selenium initialization, please wait...
+                    </h3>
+                </div>
+            `;
+        };
+
+        const SignInForm = ({ onSignedIn, session }) => {
             const [login, setLogin] = useState("");
             const [password, setPassword] = useState("");
             const [isFetching, setIsFetching] = useState(false);
@@ -30,14 +55,15 @@
                 try {
                     setIsFetching(true);
 
-                    const response = await fetch('session', {
-                        method: 'POST',
+                    const response = await fetch('session/password', {
+                        method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
                             login,
                             password,
+                            session,
                         }),
                     });
 
@@ -90,7 +116,7 @@
                 try {
                     setIsFetching(true);
 
-                    const response = await fetch('session', {
+                    const response = await fetch('session/pin', {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
@@ -145,11 +171,15 @@
 
 
         const App = () => {
-            const [state, setState] = useState(STATE_SIGN_IN);
+            const [state, setState] = useState(STATE_INIT);
             const [sessionId, setSessionId] = useState("");
 
-            const onSignedIn = ({ session }) => {
+            const onSessionCreated = ({ session }) => {
                 setSessionId(session);
+                setState(STATE_SIGN_IN);
+            };
+
+            const onSignedIn = () => {
                 setState(STATE_ENTER_PIN);
             };
 
@@ -159,16 +189,20 @@
 
             if (state === STATE_SIGN_IN) {
                 return html`
-                    <${SignInForm} onSignedIn=${onSignedIn} />
+                    <${SignInForm} onSignedIn=${onSignedIn} session=${sessionId} />
                 `;
             } else if (state === STATE_ENTER_PIN) {
                 return html`
                      <${PinForm} onSubmitted=${onPinSubmitted} session=${sessionId} />
                 `;
+            } else if (state === STATE_LOGGED_IN) {
+                return html`
+                    <${LoggedInForm} session=${sessionId} />
+                `;
             }
 
             return html`
-                <${LoggedInForm} session=${sessionId} />
+                <${InitForm} onInit=${onSessionCreated} />
             `;
         }
 
