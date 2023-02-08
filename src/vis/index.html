@@ -14,7 +14,7 @@
     <script src="./utils.js"></script>
 
     <script type="module">
-        import { html, render, useEffect, useState } from 'https://unpkg.com/htm/preact/standalone.module.js';
+        import { html, render, useCallback, useEffect, useState } from 'https://unpkg.com/htm/preact/standalone.module.js';
 
         const STATE_INIT = 0;
         const STATE_SIGN_IN = 1;
@@ -174,18 +174,18 @@
             const [state, setState] = useState(STATE_INIT);
             const [sessionId, setSessionId] = useState("");
 
-            const onSessionCreated = ({ session }) => {
+            const onSessionCreated = useCallback(({ session }) => {
                 setSessionId(session);
                 setState(STATE_SIGN_IN);
-            };
+            }, []);
 
-            const onSignedIn = () => {
+            const onSignedIn = useCallback(() => {
                 setState(STATE_ENTER_PIN);
-            };
+            }, []);
 
-            const onPinSubmitted = () => {
+            const onPinSubmitted = useCallback(() => {
                 setState(STATE_LOGGED_IN);
-            };
+            }, []);
 
             if (state === STATE_SIGN_IN) {
                 return html`
