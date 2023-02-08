@@ -24,28 +24,36 @@
         const SignInForm = ({ onSignedIn }) => {
             const [login, setLogin] = useState("");
             const [password, setPassword] = useState("");
+            const [isFetching, setIsFetching] = useState(false);
 
-            const onSignIn = () => {
-                fetch('session', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        login,
-                        password,
-                    }),
-                })
-                .then(response => response.json())
-                .then(json => {
-                    onSignedIn(json);
-                });
+            const onSignIn = async () => {
+                try {
+                    setIsFetching(true);
+
+                    const response = await fetch('session', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            login,
+                            password,
+                        }),
+                    });
+
+                    const data = await response.json();
+
+                    onSignedIn(data);
+                } finally {
+                    setIsFetching(false);
+                }
             }
 
             return html`
                 <div>
                     <input
                         autocomplete="username"
+                        disabled=${isFetching}
                         onChange=${({target: { value }}) => setLogin(value)}
                         placeholder="Email or phone number"
                         required="true"
@@ -55,6 +63,7 @@
                     />
                     <input
                         autocomplete="current-password"
+                        disabled=${isFetching}
                         onChange=${({target: { value }}) => setPassword(value)}
                         placeholder="Password"
                         required="true"
@@ -62,7 +71,12 @@
                         type="password"
                         value=${password}
                     />
-                    <button onClick=${onSignIn}>Sign in</button>
+                    <button
+                        disabled=${isFetching}
+                        onClick=${onSignIn}
+                    >
+                        Sign in
+                    </button>
                 </div>
             `;
         }
@@ -70,43 +84,52 @@
 
         const PinForm = ({ onSubmitted, session }) => {
             const [pin, setPin] = useState("");
+            const [isFetching, setIsFetching] = useState(false);
 
-            const onSubmit = () => {
-                fetch('session', {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        pin,
-                        session,
-                    }),
-                })
-                .then(response => response.json())
-                .then(json => {
-                    onSubmitted(json);
-                });
+            const onSubmit = async () => {
+                try {
+                    setIsFetching(true);
+
+                    const response = await fetch('session', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            pin,
+                            session,
+                        }),
+                    });
+
+                    const data = await response.json();
+
+                    onSubmitted(data);
+                } finally {
+                    setIsFetching(false);
+                }
             }
 
             return html`
                 <div>
-                    <h3>
-                        Enter the code you see on your authenticator app
-                    </h3>
                     <input
                         autocomplete="off"
                         autocorrect="off"
+                        disabled=${isFetching}
+                        maxlength="6"
                         onChange=${({target: { value }}) => setPin(value)}
-                        placeholder="Password"
+                        pattern="[0-9]*"
+                        placeholder="Enter the code you see on your authenticator app"
                         required="true"
                         size="30"
-                        type="password"
-                        value=${pin}
-                        maxlength="6"
                         type="tel"
-                        pattern="[0-9]*"
+                        value=${pin}
                     />
-                    <button onClick=${onSubmit}>Sign in</button>
+                    <button
+                        disabled=${isFetching}
+                        onClick=${onSubmit}
+                    >
+                        Submit
+                    </button>
                 </div>
             `;
         }
