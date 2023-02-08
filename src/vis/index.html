@@ -20,6 +20,7 @@
         const STATE_SIGN_IN = 1;
         const STATE_ENTER_PIN = 2;
         const STATE_LOGGED_IN = 3;
+        const STATE_PROFILE = 4;
 
 
         const InitForm = ({ onInit }) => {
@@ -161,18 +162,38 @@
         }
 
 
-        const LoggedInForm = ({ session }) => html`
+        const LoggedInForm = ({ onProfileFetched, session }) => {
+            useEffect(async () => {
+                const response = await fetch(`profile?session=${session}`);
+                const data = await response.json();
+                onProfileFetched(data);
+            }, []);
+
+            return html`
+                <div>
+                    <h3>
+                        Logged in, fetching profile...
+                    </h3>
+                </div>
+            `;
+        };
+
+
+        const ProfileForm = ({ profile }) => html`
             <div>
                 <h3>
-                    Logged in, session ${session}
+                    ${profile.fullname}
                 </h3>
+                <h4>
+                    ${profile.occupation}
+                </h4>
             </div>
         `;
-
 
         const App = () => {
             const [state, setState] = useState(STATE_INIT);
             const [sessionId, setSessionId] = useState("");
+            const [profile, setProfile] = useState({});
 
             const onSessionCreated = useCallback(({ session }) => {
                 setSessionId(session);
@@ -187,6 +208,11 @@
                 setState(STATE_LOGGED_IN);
             }, []);
 
+            const onProfileFetched = useCallback(({ profile }) => {
+                setProfile(profile);
+                setState(STATE_PROFILE);
+            }, []);
+
             if (state === STATE_SIGN_IN) {
                 return html`
                     <${SignInForm} onSignedIn=${onSignedIn} session=${sessionId} />
@@ -197,7 +223,11 @@
                 `;
             } else if (state === STATE_LOGGED_IN) {
                 return html`
-                    <${LoggedInForm} session=${sessionId} />
+                    <${LoggedInForm} onProfileFetched=${onProfileFetched} session=${sessionId} />
+                `;
+            } else if (state === STATE_PROFILE) {
+                return html`
+                    <${ProfileForm} profile=${profile} session=${sessionId} />
                 `;
             }
 

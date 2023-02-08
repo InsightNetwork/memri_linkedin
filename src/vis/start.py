@@ -48,6 +48,23 @@ async def get_graph(request: Request):
     return JSONResponse(data)
 
 
+async def get_profile(request: Request):
+    params = request.query_params
+    session_id = params.get("session")
+
+    if session_id:
+        linkedin.driver.session_id = session_id
+
+    profile = linkedin.get_my_profile()
+
+    data = {
+        'profile': profile,
+        'session': linkedin.driver.session_id,
+    }
+
+    return JSONResponse(data)
+
+
 async def create_session(request: Request):
     linkedin.goto_main_page()
 
@@ -103,6 +120,7 @@ app = Starlette(
         Route('/session', create_session, methods=['POST']),
         Route('/session/password', session_password, methods=['PUT']),
         Route('/session/pin', session_pin, methods=['PUT']),
+        Route('/profile', get_profile, methods=['GET']),
         Route('/graph', get_graph, methods=['GET']),
         Route('/', get_index, methods=['GET']),
         Mount('/', app=StaticFiles(directory=STATIC_ROOT, html=True),
