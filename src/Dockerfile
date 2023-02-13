@@ -30,27 +30,14 @@ COPY ./vis /app/vis
 RUN pip3 install -r /app/memri/requirements.txt
 RUN pip3 install -r /app/linkedin/requirements.txt
 
+ARG VIS_OWNER_KEY
+ARG VIS_DATABASE_KEY
+
+ENV VIS_OWNER_KEY=${VIS_OWNER_KEY}
+ENV VIS_DATABASE_KEY=${VIS_DATABASE_KEY}
 ENV PYTHONPATH=/app
 
 EXPOSE 8080
 
 ENTRYPOINT ["python3", "app/vis/start.py", "serve"]
 
-# install git for pip to install from git
-# RUN apt-get update && \
-#     apt-get install -y git && \
-#     rm -rf /var/lib/apt/lists/* && \
-#     pip3 install --upgrade pip
-
-# COPY ./memri /app/memri
-# COPY ./linkedin /app/linkedin
-# COPY ./vis /app/vis
-
-# RUN pip3 install -r /app/memri/requirements.txt
-# RUN pip3 install -r /app/linkedin/requirements.txt
-
-# ENV PYTHONPATH=/app
-
-# EXPOSE 8080
-
-# ENTRYPOINT ["python3", "app/vis/start.py", "serve"]
