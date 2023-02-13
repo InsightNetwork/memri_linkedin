@@ -3,10 +3,14 @@ import logging
 from random import randint
 from selenium import webdriver
 from selenium.webdriver import ActionChains
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
+from user_agent import generate_user_agent
 import time
 from typing import Any, Dict
 
@@ -23,7 +27,17 @@ default_capabilities = {
 
 class LinkedInClient:
     def __init__(self, log: Any = logging):
-        self.driver = webdriver.Chrome()
+        options = Options()
+        options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-extensions")
+        options.add_argument("--disable-gpu")
+        options.add_argument("disable-infobars")
+        options.add_argument("start-maximised")
+        options.add_argument(f"user-agent={generate_user_agent()}")
+        s = Service(ChromeDriverManager().install())
+        self.driver = webdriver.Chrome(service=s, options=options)
         self.log = log
 
     def __del__(self):

@@ -1,4 +1,4 @@
 Jinja2==3.0.0
 pymemri==0.0.41
 starlette==0.19.1
-uvicorn==0.20.0
+uvicorn==0.17.6
