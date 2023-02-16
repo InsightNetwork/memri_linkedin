@@ -5,6 +5,7 @@ from pymemri.data.schema import Item
 
 SERVICE_NAME = "linkedin"
 
+
 class HashableItem(Item):
     def __hash__(self):
         if self.externalId is None:

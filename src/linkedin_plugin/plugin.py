@@ -1,8 +1,8 @@
-from loguru import logger
 from pymemri.plugin.pluginbase import PluginBase
 from pymemri.pod.client import PodClient
 from pymemri.webserver.public_api import register_endpoint
-from .schema import SERVICE_NAME, Account
+from linkedin_plugin.schema import Account
+
 
 class LinkedinPlugin(PluginBase):
     def __init__(self, client: PodClient, *args, **kwargs) -> None:
