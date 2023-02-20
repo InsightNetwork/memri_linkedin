@@ -17,6 +17,7 @@
         const STATE_ENTER_PIN = 2;
         const STATE_LOGGED_IN = 3;
         const STATE_PROFILE = 4;
+        const STATE_CONNECTIONS = 5;
 
 
         const InitForm = ({ onInit }) => {
@@ -175,7 +176,53 @@
         };
 
 
-        const ProfileForm = ({ profile }) => html`
+        const ProfileForm = ({ onConnectionsFetched, profile, session  }) => {
+            const [isFetching, setIsFetching] = useState(false);
+
+            const onSubmit = async () => {
+                try {
+                    setIsFetching(true);
+
+                    const response = await fetch(`connections`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            profile,
+                            session,
+                        }),
+                    });
+
+                    const data = await response.json();
+
+                    onConnectionsFetched(data);
+                } finally {
+                    setIsFetching(false);
+                }
+            }
+
+            return html`
+                <div>
+                    <h3>
+                        ${profile.displayName}
+                    </h3>
+                    <h4>
+                        ${profile.description}
+                    </h4>
+                    <p>
+                        <button
+                            disabled=${isFetching}
+                            onClick=${onSubmit}
+                        >
+                            Collect connections
+                        </button>
+                    </p>
+                </div>
+            `;
+        };
+
+        const ConnectionsForm = ({ connections, profile }) => html`
             <div>
                 <h3>
                     ${profile.displayName}
@@ -183,6 +230,9 @@
                 <h4>
                     ${profile.description}
                 </h4>
+                <p>
+                    Found: ${connections} connections
+                </p>
             </div>
         `;
 
@@ -190,6 +240,7 @@
             const [state, setState] = useState(STATE_INIT);
             const [sessionId, setSessionId] = useState("");
             const [profile, setProfile] = useState({});
+            const [connections, setConnections] = useState({});
 
             const onSessionCreated = useCallback(({ session }) => {
                 setSessionId(session);
@@ -209,6 +260,11 @@
                 setState(STATE_PROFILE);
             }, []);
 
+            const onConnectionsFetched = useCallback(({ total }) => {
+                setConnections(total);
+                setState(STATE_CONNECTIONS);
+            }, []);
+
             if (state === STATE_SIGN_IN) {
                 return html`
                     <${SignInForm} onSignedIn=${onSignedIn} session=${sessionId} />
@@ -223,7 +279,11 @@
                 `;
             } else if (state === STATE_PROFILE) {
                 return html`
-                    <${ProfileForm} profile=${profile} session=${sessionId} />
+                    <${ProfileForm} onConnectionsFetched=${onConnectionsFetched} profile=${profile} session=${sessionId} />
+                `;
+            } else if (state === STATE_CONNECTIONS) {
+                return html`
+                    <${ConnectionsForm} connections=${connections} profile=${profile} session=${sessionId} />
                 `;
             }
 

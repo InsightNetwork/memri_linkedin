@@ -23,7 +23,7 @@ def main(file: str, owner_key: str, database_key: str):
                     externalId=i["_id"],
                     username=i["data"]["profile"]["username"],
                     displayName=i["data"]["profile"]["fullname"],
-                    location_name=i["data"]["profile"].get("loc"),
+                    locationName=i["data"]["profile"].get("loc"),
                     description=i["data"]["profile"].get("desc"),
                     avatarUrl=i["data"]["profile"].get("image"),
                 )

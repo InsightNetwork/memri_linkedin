@@ -8,7 +8,9 @@ from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 from memri.LinkedInGraph import LinkedInGraph
+from memri.schema import LinkedInAccount, LinkedInLink
 from linkedin.LinkedInClient import LinkedInClient
+from typing import List
 
 
 ROOT = os.path.dirname(__file__)
@@ -116,6 +118,55 @@ async def session_pin(request: Request):
     return JSONResponse(data)
 
 
+async def collect_connections(request: Request):
+    params = await request.json()
+    profile = params.get("profile")
+    session_id = params.get("session")
+
+    if session_id:
+        linkedin.driver.session_id = session_id
+
+    accounts: List["LinkedInAccount"] = []
+    links: List["LinkedInLink"] = []
+
+    connections = linkedin.get_my_connections()
+
+    accounts.append(
+        LinkedInAccount(
+            username=profile["username"],
+            displayName=profile["displayName"],
+            description=profile.get("description"),
+        )
+    )
+
+    for i in connections:
+        a = LinkedInAccount(
+            username=i["profile_id"],
+            displayName=i["profile_name"],
+            description=i.get("profile_occupation"),
+            locationName=i.get("profile_location"),
+            avatarUrl=i.get("profile_img"),
+        )
+        accounts.append(a)
+
+        links.append(
+            LinkedInLink(
+                accounts[0],
+                a,
+                "LI",
+            )
+        )
+
+    graph.bulk_create(accounts=accounts, links=links)
+
+    data = {
+        'session': linkedin.driver.session_id,
+        'total': len(accounts),
+    }
+
+    return JSONResponse(data)
+
+
 def startup():
     print('Ready to go')
 
@@ -126,6 +177,7 @@ app = Starlette(
         Route('/session', create_session, methods=['POST']),
         Route('/session/password', session_password, methods=['PUT']),
         Route('/session/pin', session_pin, methods=['PUT']),
+        Route('/connections', collect_connections, methods=['POST']),
         Route('/profile', get_profile, methods=['GET']),
         Route('/graph', get_graph, methods=['GET']),
         Route('/vgraph', get_vgraph, methods=['GET']),

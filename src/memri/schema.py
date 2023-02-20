@@ -4,7 +4,7 @@ from typing import List, Optional
 
 class LinkedInAccount(Account):
     username: str
-    location_name: Optional[str] = None
+    locationName: Optional[str] = None
 
 
 class LinkedInLink(Edge):
