@@ -8,10 +8,6 @@
             padding: 22px;
         }
     </style>
-    <script src="//unpkg.com/three"></script>
-    <script src="//unpkg.com/3d-force-graph"></script>
-    <script src="//unpkg.com/three-spritetext"></script>
-    <script src="./utils.js"></script>
 
     <script type="module">
         import { html, render, useCallback, useEffect, useState } from 'https://unpkg.com/htm/preact/standalone.module.js';
@@ -244,112 +240,6 @@
 
 <body>
     <div id="app" />
-    <div id="3d-graph" />
-
-    <script>
-        function color_me(node) {
-            const min_luminence = 0.6,
-                min_saturation = 0.6,
-                min_hue = 0, // 180, // 360 is red
-                max_hue = 360; // 450;
-            const reds = '#FFA438 #E87B33 #FF7244 #E84633 #FF3855'.split(' ')
-            const blues = '#79CECB #2990B5 #7DDAED #07CCFE #29C3AB'.split(' ')
-            const which = Math.floor(Math.random() * (5));
-            return gen_color(.5, min_luminence, 1, min_saturation, 1, min_hue, max_hue)
-            // return  blues[which]; 
-        }
-        const elem = document.getElementById('3d-graph');
-        let gData = {}
-        let Graph = {}
-        return
-        fetch('graph')
-            .then(response => response.json())
-            .then(json => {
-                gData = json;
-                console.log('gData', gData)
-                const order = gData.nodes.map(one => one.id)
-                gData.links.forEach(link => {
-                    const a = gData.nodes[order.indexOf(link.source)];
-                    const b = gData.nodes[order.indexOf(link.target)];
-                    !a.neighbors && (a.neighbors = []);
-                    !b.neighbors && (b.neighbors = []);
-                    a.neighbors.push(b);
-                    b.neighbors.push(a);
-
-                    !a.links && (a.links = []);
-                    !b.links && (b.links = []);
-                    a.links.push(link);
-                    b.links.push(link);
-                });
-                const highlightNodes = new Set();
-                const highlightLinks = new Set();
-                let hoverNode = null;
-
-                Graph = ForceGraph3D()(elem)
-                    // .jsonUrl(fname + '.json')
-                    .graphData(gData)
-                    .nodeAutoColorBy(d => { console.log(d.name); return d.name?.slice(0, 4) })
-                    // .nodeVal(node => node.weight*100)
-                    .nodeLabel(node => `@${node.username}: ${node.fullname} followers <br> ${node.description}`)
-                    .nodeOpacity(node => {
-                        console.log('opac', node)
-                        const is_highlit = highlightNodes.size == 0 || highlightNodes.has(node);
-                        console.log('is', is_highlit)
-                    })
-                    .nodeVisibility(node => {
-                        const is_highlit = highlightNodes.size == 0 || highlightNodes.has(node);
-                        return is_highlit ? true : false;
-                    })
-                    .linkOpacity(0.3)
-                    .nodeThreeObject(node => {
-                        const sprite = new SpriteText(node.fullname);
-                        sprite.material.depthWrite = false; // make sprite background transparent
-                        sprite.color = color_me(node);
-                        sprite.textHeight = 8;
-                        return sprite;
-                    })
-                    .linkVisibility(link => {
-                        const is_highlit = highlightLinks.size == 0 || highlightLinks.has(link);
-                        return is_highlit ? true : false;
-                    })
-                    .linkDirectionalParticles(link => { return highlightLinks.has(link) ? 4 : 0 })
-                    .linkDirectionalParticleWidth(4)
-                    .onNodeHover(node => {
-                        // no state change
-                        if ((!node && !highlightNodes.size) || (node && hoverNode === node)) return;
-
-                        highlightNodes.clear();
-                        highlightLinks.clear();
-                        if (node) {
-                            highlightNodes.add(node);
-                            if (node.neighbors) {
-                                node.neighbors.forEach(neighbor => highlightNodes.add(neighbor));
-                                node.links.forEach(link => highlightLinks.add(link));
-                            } else {
-                                console.log('no neighbrs', node)
-                            }
-
-                        }
-
-                        hoverNode = node || null;
-                        // console.log('hover ', node)
-                        updateHighlight();
-                    })
-
-                Graph.d3Force('charge').strength(-520);
-            });
-
-
-        function updateHighlight() {
-            // trigger update of highlighted objects in scene
-            Graph
-                .nodeColor(Graph.nodeColor())
-                .linkWidth(Graph.linkWidth())
-                .linkDirectionalParticles(Graph.linkDirectionalParticles())
-                .nodeOpacity(Graph.nodeOpacity());
-        }
-
-    </script>
 </body>
 
 </html>

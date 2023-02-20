@@ -3,37 +3,39 @@ import json
 import os
 from typing import List
 from memri.LinkedInGraph import LinkedInGraph
+from memri.schema import LinkedInAccount, LinkedInLink
 
 
 ROOT = os.path.dirname(__file__)
 
 
 def main(file: str, owner_key: str, database_key: str):
-    persons: List["LinkedInGraph.NooPerson"] = []
-    links: List["LinkedInGraph.NooLink"] = []
+    accounts: List["LinkedInAccount"] = []
+    links: List["LinkedInLink"] = []
 
     with open(os.path.join(ROOT, file)) as f:
         sdata = f.read()
         m = json.loads(sdata)
 
         for i in m["result"][0]["profiles"]:
-            persons.append(
-                LinkedInGraph.NooPerson(
+            accounts.append(
+                LinkedInAccount(
                     externalId=i["_id"],
                     username=i["data"]["profile"]["username"],
-                    fullname=i["data"]["profile"]["fullname"],
-                    location=i["data"]["profile"].get("loc"),
+                    displayName=i["data"]["profile"]["fullname"],
+                    location_name=i["data"]["profile"].get("loc"),
                     description=i["data"]["profile"].get("desc"),
+                    avatarUrl=i["data"]["profile"].get("image"),
                 )
             )
 
         for i in m["result"][0]["edges"]:
-            p1 = list(filter(lambda x: x.externalId == i[0], persons))
-            p2 = list(filter(lambda x: x.externalId == i[1], persons))
+            p1 = list(filter(lambda x: x.externalId == i[0], accounts))
+            p2 = list(filter(lambda x: x.externalId == i[1], accounts))
 
             if p1 and p2:
                 links.append(
-                    LinkedInGraph.NooLink(
+                    LinkedInLink(
                         p1[0],
                         p2[0],
                         i[2],
@@ -41,7 +43,7 @@ def main(file: str, owner_key: str, database_key: str):
                 )
 
     graph = LinkedInGraph(owner_key=owner_key, database_key=database_key)
-    graph.bulk_create(persons=persons, links=links)
+    graph.bulk_create(accounts=accounts, links=links)
 
 
 if __name__ == "__main__":

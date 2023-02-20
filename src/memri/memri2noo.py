@@ -11,11 +11,11 @@ def main(file: str, owner_key: str, database_key: str):
     graph = LinkedInGraph(owner_key=owner_key, database_key=database_key,
                           create_account=False)
 
-    persons = graph.get_persons()
-    links = graph.get_links(persons)
+    accounts = graph.get_accounts()
+    links = graph.get_links(accounts)
 
     data = {
-        "nodes": [i.to_json() for i in persons],
+        "nodes": [i.to_json() for i in accounts],
         "links": [{"source": i.source.id, "target": i.target.id,
                    "type": i.name} for i in links],
     }

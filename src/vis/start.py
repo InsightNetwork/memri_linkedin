@@ -35,12 +35,18 @@ async def get_index(request: Request):
     })
 
 
+async def get_vgraph(request: Request):
+    return html_templates.TemplateResponse('vgraph.html', {
+        'request': request,
+    })
+
+
 async def get_graph(request: Request):
-    persons = graph.get_persons()
-    links = graph.get_links(persons)
+    accounts = graph.get_accounts()
+    links = graph.get_links(accounts)
 
     data = {
-        "nodes": [i.to_json() for i in persons],
+        "nodes": [i.to_json() for i in accounts],
         "links": [{"source": i.source.id, "target": i.target.id,
                    "type": i.name} for i in links],
     }
@@ -122,6 +128,7 @@ app = Starlette(
         Route('/session/pin', session_pin, methods=['PUT']),
         Route('/profile', get_profile, methods=['GET']),
         Route('/graph', get_graph, methods=['GET']),
+        Route('/vgraph', get_vgraph, methods=['GET']),
         Route('/', get_index, methods=['GET']),
         Mount('/', app=StaticFiles(directory=STATIC_ROOT, html=True),
               name="index"),

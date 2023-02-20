@@ -1,27 +1,18 @@
-from pymemri.data.schema import Edge, Item
-from typing import List, Optional
+from typing import List
 from memri.MemriGraph import MemriGraph
+from memri.schema import LinkedInAccount, LinkedInLink
 
 
 class LinkedInGraph(MemriGraph):
-    class NooPerson(Item):
-        username: str
-        fullname: str
-        location: Optional[str] = None
-        description: Optional[str] = None
-
-    class NooLink(Edge):
-        pass
-
     def setup_schema(self):
-        self.client.add_to_schema(LinkedInGraph.NooPerson)
+        self.client.add_to_schema(LinkedInAccount)
 
         self.client.api.create_item(
             {
                 "type": "ItemEdgeSchema",
                 "edgeName": "VOUCHES_FOR",
-                "sourceType": "NooPerson",
-                "targetType": "NooPerson",
+                "sourceType": "LinkedInAccount",
+                "targetType": "LinkedInAccount",
             }
         )
 
@@ -29,8 +20,8 @@ class LinkedInGraph(MemriGraph):
             {
                 "type": "ItemEdgeSchema",
                 "edgeName": "LI",
-                "sourceType": "NooPerson",
-                "targetType": "NooPerson",
+                "sourceType": "LinkedInAccount",
+                "targetType": "LinkedInAccount",
             }
         )
 
@@ -38,29 +29,28 @@ class LinkedInGraph(MemriGraph):
             {
                 "type": "ItemEdgeSchema",
                 "edgeName": "CLAIM",
-                "sourceType": "NooPerson",
-                "targetType": "NooPerson",
+                "sourceType": "LinkedInAccount",
+                "targetType": "LinkedInAccount",
             }
         )
 
     def bulk_create(
         self,
-        persons: List["LinkedInGraph.NooPerson"],
-        links: List["LinkedInGraph.NooLink"],
+        accounts: List["LinkedInAccount"],
+        links: List["LinkedInLink"],
     ):
-        self.client.bulk_action(create_items=persons, create_edges=links)
+        self.client.bulk_action(create_items=accounts, create_edges=links)
 
-    def get_persons(self) -> List["LinkedInGraph.NooPerson"]:
-        return self.client.search({"type": "NooPerson"}, include_edges=False)
+    def get_accounts(self) -> List["LinkedInAccount"]:
+        return self.client.search({"type": "LinkedInAccount"}, include_edges=False)
 
-    def get_links(self, persons: List["LinkedInGraph.NooPerson"]
-                  ) -> List["LinkedInGraph.NooLink"]:
+    def get_links(self, persons: List["LinkedInAccount"]) -> List["LinkedInLink"]:
         links = []
 
         for i in persons:
             person_links = self.client.get_edges(i.id)
             for j in person_links:
-                links.append(LinkedInGraph.NooLink(
+                links.append(LinkedInLink(
                     i,
                     j["item"],
                     j["name"]
