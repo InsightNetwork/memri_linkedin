@@ -79,9 +79,17 @@ class LinkedInClient:
     def simulate_press_end(self):
         ActionChains(self.driver).send_keys(Keys.END).perform()
 
-    def try_to_click_more_results(self):
-        ActionChains(self.driver).send_keys(Keys.HOME).perform()
-        time.sleep(0.5)
+    def try_to_click_more_results(self) -> bool:
+        try:
+            container = self.driver.find_element(By.CLASS_NAME, "search-results-container")
+            button = container.find_element(By.CSS_SELECTOR, ".artdeco-pagination .artdeco-pagination__button--next")
+            if button.get_attribute("disabled") == "true":
+                return False
+            else:
+                button.click()
+        except:
+            return False
+        return True
 
     def get_my_connections(self):
         self.go_to_my_connections()
@@ -89,24 +97,17 @@ class LinkedInClient:
         total_connections = self.get_total_connections()
         logging.info(f"Total connections: {total_connections}")
 
-        retries = 0
-        prev_connections = []
         found_connections = self.get_connections()
 
         while len(found_connections) < total_connections:
-            self.try_to_click_more_results()
             self.simulate_press_end()
+            self.simulate_pause(1, 1)
+
+            if not self.try_to_click_more_results():
+                break
+
             self.simulate_pause(1, 3)
-            prev_connections = found_connections
-            found_connections = self.get_connections()
-
-            if len(found_connections) == len(prev_connections):
-                retries = retries + 1
-
-                if retries == 3:
-                    break
-            else:
-                retries = 0
+            found_connections = found_connections + self.get_connections()
 
         logging.info(f"Found connections: {len(found_connections)}")
 
@@ -114,36 +115,70 @@ class LinkedInClient:
 
     def go_to_my_connections(self):
         self.driver.get(
-            "https://www.linkedin.com/mynetwork/invite-connect/connections/"
+            "https://www.linkedin.com/search/results/people/?network=%5B%22F%22%5D&origin=MEMBER_PROFILE_CANNED_SEARCH&sid=~ea"
         )
         self.simulate_pause(1, 5)
 
     def get_total_connections(self):
-        text = self.driver.find_element(By.CSS_SELECTOR, "header h1").text.strip()
+        container = self.driver.find_element(By.CLASS_NAME, "search-results-container")
+        text = container.find_element(By.CSS_SELECTOR, "h2").text.strip()
         return int(text.split(" ")[0].replace(",", ""))
 
     def get_connections(self):
         profiles = []
         try:
-            connections = self.driver.find_elements(By.CLASS_NAME, "mn-connection-card")
+            container = self.driver.find_element(By.CLASS_NAME, "search-results-container")
+            connections = container.find_elements(By.CLASS_NAME, "entity-result__item")
             for conn in connections:
-                anchor = conn.find_element(By.CLASS_NAME, "mn-connection-card__picture")
-                profile_link = anchor.get_attribute("href")
-                occupation = conn.find_element(
-                    By.CLASS_NAME, "mn-connection-card__occupation"
-                )
-                profile_occupation = occupation.get_attribute("innerHTML").strip()
-                name = conn.find_element(By.CLASS_NAME, "mn-connection-card__name")
-                profile_name = name.get_attribute("innerHTML").strip()
+                container = conn.find_element(By.CLASS_NAME, "entity-result__universal-image")
+                anchor = container.find_element(By.CSS_SELECTOR, "a")
+                profile_link = anchor.get_attribute("href").split('?')[0]
+                profile_id = profile_link.split("/")[-1]
+
+                try:
+                    img = container.find_element(By.CSS_SELECTOR, "img")
+                    profile_img = img.get_attribute("src")
+                except:
+                    profile_img = None
+
+                container = conn.find_element(By.CLASS_NAME, "entity-result__content")
+                profile_name = container.find_element(By.CLASS_NAME, "entity-result__title-text").find_element(By.CSS_SELECTOR, "a span span").text
+
+                try:
+                    profile_occupation = container.find_element(By.CLASS_NAME, "entity-result__primary-subtitle").text
+                except:
+                    profile_occupation = None
+
+                try:
+                    profile_location = container.find_element(By.CLASS_NAME, "entity-result__secondary-subtitle").text
+                except:
+                    profile_location = None
+
+                try:
+                    profile_summary = container.find_element(By.CLASS_NAME, "entity-result__summary").find_element(By.CSS_SELECTOR, "span").text
+                    pass
+                except:
+                    profile_summary = None
+
+                # try:
+                #     profile_insight = container.find_element(By.CLASS_NAME, "entity-result__simple-insight-text").find_element(By.CSS_SELECTOR, "strong").text
+                #     pass
+                # except:
+                #     profile_insight = None
+
                 profiles.append(
                     {
-                        "profile_occupation": profile_occupation,
+                        "profile_id": profile_id,
                         "profile_link": profile_link,
                         "profile_name": profile_name,
+                        "profile_img": profile_img,
+                        "profile_occupation": profile_occupation,
+                        "profile_location": profile_location,
+                        "profile_summary": profile_summary,
                     }
                 )
-        except:
-            logging.error("Getting connections")
+        except Exception as e:
+            logging.error(f"Getting connections: {e}")
         return profiles
 
     def get_my_profile(self):
