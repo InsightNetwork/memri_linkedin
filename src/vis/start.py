@@ -96,6 +96,7 @@ async def session_password(request: Request):
 
     data = {
         'session': linkedin.driver.session_id,
+        'pin_enabled': linkedin.is_pin_enabled()
     }
 
     return JSONResponse(data)

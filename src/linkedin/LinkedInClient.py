@@ -53,6 +53,13 @@ class LinkedInClient:
             By.CSS_SELECTOR, ".sign-in-form__submit-button"
         ).click()
 
+    def is_pin_enabled(self):
+        try:
+            self.driver.find_element(By.ID, "input__phone_verification_pin")
+            return True
+        except:
+            return False
+
     def enter_pin(self, pin: str):
         self.driver.find_element(By.ID, "input__phone_verification_pin").send_keys(
             pin

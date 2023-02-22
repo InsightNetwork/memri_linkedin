@@ -247,8 +247,12 @@
                 setState(STATE_SIGN_IN);
             }, []);
 
-            const onSignedIn = useCallback(() => {
-                setState(STATE_ENTER_PIN);
+            const onSignedIn = useCallback(({ pin_enabled }) => {
+                if (pin_enabled) {
+                    setState(STATE_ENTER_PIN);
+                } else {
+                    setState(STATE_LOGGED_IN);
+                }
             }, []);
 
             const onPinSubmitted = useCallback(() => {
