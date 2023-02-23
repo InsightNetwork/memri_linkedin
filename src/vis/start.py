@@ -127,42 +127,30 @@ async def collect_connections(request: Request):
     if session_id:
         linkedin.driver.session_id = session_id
 
-    accounts: List["LinkedInAccount"] = []
-    links: List["LinkedInLink"] = []
-
     connections = linkedin.get_my_connections()
 
-    accounts.append(
-        LinkedInAccount(
+    graph.create_connections(
+        owner=LinkedInAccount(
+            externalId=profile["username"],
             username=profile["username"],
             displayName=profile["displayName"],
             description=profile.get("description"),
-        )
+        ),
+        connections=[
+            LinkedInAccount(
+                externalId=i["profile_id"],
+                username=i["profile_id"],
+                displayName=i["profile_name"],
+                description=i.get("profile_occupation"),
+                locationName=i.get("profile_location"),
+                avatarUrl=i.get("profile_img"),
+            ) for i in connections
+        ]
     )
-
-    for i in connections:
-        a = LinkedInAccount(
-            username=i["profile_id"],
-            displayName=i["profile_name"],
-            description=i.get("profile_occupation"),
-            locationName=i.get("profile_location"),
-            avatarUrl=i.get("profile_img"),
-        )
-        accounts.append(a)
-
-        links.append(
-            LinkedInLink(
-                accounts[0],
-                a,
-                "LI",
-            )
-        )
-
-    graph.bulk_create(accounts=accounts, links=links)
 
     data = {
         'session': linkedin.driver.session_id,
-        'total': len(accounts),
+        'total': len(connections),
     }
 
     return JSONResponse(data)

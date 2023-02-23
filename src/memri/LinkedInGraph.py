@@ -34,6 +34,19 @@ class LinkedInGraph(MemriGraph):
             }
         )
 
+    def create_connections(self, owner: LinkedInAccount, connections: List["LinkedInAccount"]):
+        self.client.create_if_external_id_not_exists(owner)
+
+        create_edges: List["LinkedInLink"] = []
+        create_items: List["LinkedInAccount"] = []
+
+        for i in connections:
+            if not self.client.external_id_exists(i):
+                create_items.append(i)
+                create_edges.append(LinkedInLink(owner, i, "LI"))
+
+        self.client.bulk_action(create_items=create_items, create_edges=create_edges)
+
     def bulk_create(
         self,
         accounts: List["LinkedInAccount"],
