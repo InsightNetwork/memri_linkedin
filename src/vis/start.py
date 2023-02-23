@@ -21,6 +21,7 @@ DEBUG = config('VIS_DEBUG', cast=bool, default=False)
 PORT = config('VIS_PORT', cast=int, default=8080)
 OWNER_KEY = config('VIS_OWNER_KEY', cast=str)
 DATABASE_KEY = config('VIS_DATABASE_KEY', cast=str)
+POD_URL = config('VIS_POD_URL', cast=str)
 
 STATIC_ROOT = ROOT
 html_templates = Jinja2Templates(directory=STATIC_ROOT)
@@ -40,6 +41,9 @@ async def get_index(request: Request):
 async def get_vgraph(request: Request):
     return html_templates.TemplateResponse('vgraph.html', {
         'request': request,
+        'owner_key': OWNER_KEY,
+        'database_key': DATABASE_KEY,
+        'pod_url': POD_URL
     })
 
 

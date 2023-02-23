@@ -31,10 +31,42 @@
             return gen_color(.5, min_luminence, 1, min_saturation, 1, min_hue, max_hue)
             // return  blues[which]; 
         }
+
         const elem = document.getElementById('3d-graph');
         let gData = {}
         let Graph = {}
-        //return
+
+        const getPodData = async () => {
+            const OWNER_KEY = '{{owner_key}}';
+            const DATABASE_KEY = '{{database_key}}';
+            const POD_URL = '{{pod_url}}';
+
+            const podData = await fetch(`${POD_URL}/v4/${OWNER_KEY}/search`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "auth": {
+                        "type": "ClientAuth",
+                        "databaseKey": DATABASE_KEY
+                    },
+                    "payload": {
+                        "externalId": "ilya-radinsky-5a60b870",
+                        "type": "LinkedInAccount",
+                        "deleted": false,
+                        "[[edges]]": {}
+                    }
+                }),
+            });
+
+            return podData;
+        };
+
+        getPodData().then((data) => {
+            console.log('podData', data);
+        });
+
         fetch('graph')
             .then(response => response.json())
             .then(json => {
