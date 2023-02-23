@@ -35,7 +35,7 @@ class LinkedInClient:
         options.add_argument("--disable-gpu")
         options.add_argument("disable-infobars")
         options.add_argument("start-maximised")
-        options.add_argument(f"user-agent={generate_user_agent()}")
+        options.add_argument(f"user-agent={generate_user_agent(navigator='chrome')}")
         s = Service(ChromeDriverManager().install())
         self.driver = webdriver.Chrome(service=s, options=options)
         self.log = log
