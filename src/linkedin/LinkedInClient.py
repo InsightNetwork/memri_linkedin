@@ -134,7 +134,18 @@ class LinkedInClient:
     def get_connections(self):
         profiles = []
         try:
-            container = self.driver.find_element(By.CLASS_NAME, "search-results-container")
+            container = None
+            counter = 0
+            while counter < 3 and not container:
+                try:
+                    container = self.driver.find_element(By.CLASS_NAME, "search-results-container")
+                except:
+                    self.simulate_pause(5, 10)
+                counter = counter + 1
+
+            if not container:
+                raise
+
             connections = container.find_elements(By.CLASS_NAME, "entity-result__item")
             for conn in connections:
                 container = conn.find_element(By.CLASS_NAME, "entity-result__universal-image")
