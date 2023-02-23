@@ -78,6 +78,7 @@ async def create_session(request: Request):
 
     data = {
         'session': linkedin.driver.session_id,
+        'password_enabled': linkedin.is_password_enabled()
     }
 
     return JSONResponse(data)

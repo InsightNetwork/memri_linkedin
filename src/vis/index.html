@@ -242,9 +242,13 @@
             const [profile, setProfile] = useState({});
             const [connections, setConnections] = useState({});
 
-            const onSessionCreated = useCallback(({ session }) => {
+            const onSessionCreated = useCallback(({ session, password_enabled }) => {
                 setSessionId(session);
-                setState(STATE_SIGN_IN);
+                if (password_enabled) {
+                    setState(STATE_SIGN_IN);
+                } else {
+                    setState(STATE_LOGGED_IN);
+                }
             }, []);
 
             const onSignedIn = useCallback(({ pin_enabled }) => {
