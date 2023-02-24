@@ -136,15 +136,16 @@ async def collect_connections(request: Request):
 
     graph.create_connections(
         owner=LinkedInAccount(
-            externalId=profile["username"],
-            username=profile["username"],
+            externalId=profile["handle"],
+            handle=profile["handle"],
             displayName=profile["displayName"],
             description=profile.get("description"),
+            isMe=True,
         ),
         connections=[
             LinkedInAccount(
                 externalId=i["profile_id"],
-                username=i["profile_id"],
+                handle=i["profile_id"],
                 displayName=i["profile_name"],
                 description=i.get("profile_occupation"),
                 locationName=i.get("profile_location"),

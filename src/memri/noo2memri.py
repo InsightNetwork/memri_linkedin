@@ -21,7 +21,7 @@ def main(file: str, owner_key: str, database_key: str):
             accounts.append(
                 LinkedInAccount(
                     externalId=i["_id"],
-                    username=i["data"]["profile"]["username"],
+                    handle=i["data"]["profile"]["username"],
                     displayName=i["data"]["profile"]["fullname"],
                     locationName=i["data"]["profile"].get("loc"),
                     description=i["data"]["profile"].get("desc"),

@@ -20,7 +20,7 @@
     <div id="3d-graph" />
 
     <script type="module">
-        import { getLinks } from './pod.js';
+        import { getOwnerProfile } from './pod.js';
 
         function color_me(node) {
             const min_luminence = 0.6,
@@ -41,9 +41,8 @@
         const POD_URL = '{{pod_url}}';
         const OWNER_KEY = '{{owner_key}}';
         const DATABASE_KEY = '{{database_key}}';
-        const EXTERNAL_ID = "ilya-radinsky-5a60b870";
 
-        getLinks(POD_URL, OWNER_KEY, DATABASE_KEY, EXTERNAL_ID).then((data) => {
+        getOwnerProfile(POD_URL, OWNER_KEY, DATABASE_KEY, true).then((data) => {
             console.log('podData', data);
         });
 
@@ -75,7 +74,7 @@
                     .graphData(gData)
                     .nodeAutoColorBy(d => { console.log(d.name); return d.name?.slice(0, 4) })
                     // .nodeVal(node => node.weight*100)
-                    .nodeLabel(node => `@${node.username}: ${node.displayName} <br> ${node.description}`)
+                    .nodeLabel(node => `@${node.handle}: ${node.displayName} <br> ${node.description}`)
                     .nodeOpacity(node => {
                         console.log('opac', node)
                         const is_highlit = highlightNodes.size == 0 || highlightNodes.has(node);

@@ -3,7 +3,6 @@ from typing import List, Optional
 
 
 class LinkedInAccount(Account):
-    username: str
     locationName: Optional[str] = None
 
 

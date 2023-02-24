@@ -210,12 +210,12 @@ class LinkedInClient:
         profile = {}
         try:
             profile_block = self.driver.find_element(By.CLASS_NAME, "feed-identity-module__actor-meta")
-            username = profile_block.find_element(By.XPATH, "a").get_attribute("href").strip('/').split('/')[-1]
+            handle = profile_block.find_element(By.XPATH, "a").get_attribute("href").strip('/').split('/')[-1]
             displayName = profile_block.find_element(By.XPATH, "a/div[2]").get_attribute("innerHTML").strip()
             description = profile_block.find_element(By.XPATH, "p").get_attribute("innerHTML").strip()
 
             profile = {
-                'username': username,
+                'handle': handle,
                 'displayName': displayName,
                 'description': description,
             }
