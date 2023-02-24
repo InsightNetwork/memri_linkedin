@@ -254,10 +254,27 @@
             const [login, setLogin] = useState("");
             const [password, setPassword] = useState("");
 
-            const onSessionCreated = useCallback(({ session, password_enabled }) => {
+            const onSessionCreated = useCallback(async ({ session, password_enabled, owner }) => {
                 setSessionId(session);
                 if (password_enabled) {
-                    setState(STATE_SIGN_IN);
+                    if (owner) {
+                        const response = await fetch('session/password', {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                login: owner.authEmail,
+                                password: owner.secret,
+                                session,
+                            }),
+                        });
+
+                        const data = await response.json();
+                        onSignedIn(data);
+                    } else {
+                        setState(STATE_SIGN_IN);
+                    }
                 } else {
                     setState(STATE_LOGGED_IN);
                 }

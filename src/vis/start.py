@@ -108,9 +108,12 @@ async def create_profile(request: Request):
 async def create_session(request: Request):
     linkedin.goto_main_page()
 
+    owner = graph.get_owner()
+
     data = {
         'session': linkedin.driver.session_id,
-        'password_enabled': linkedin.is_password_enabled()
+        'password_enabled': linkedin.is_password_enabled(),
+        'owner': owner.to_json() if owner else None
     }
 
     return JSONResponse(data)
