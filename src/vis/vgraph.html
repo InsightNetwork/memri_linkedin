@@ -12,6 +12,7 @@
     <script src="//unpkg.com/3d-force-graph"></script>
     <script src="//unpkg.com/three-spritetext"></script>
     <script src="./utils.js"></script>
+    <script src="./pod.js"></script>
 </head>
 
 
@@ -19,7 +20,7 @@
 <body>
     <div id="3d-graph" />
 
-    <script>
+    <script type="module">
         function color_me(node) {
             const min_luminence = 0.6,
                 min_saturation = 0.6,
@@ -36,34 +37,12 @@
         let gData = {}
         let Graph = {}
 
-        const getPodData = async () => {
-            const OWNER_KEY = '{{owner_key}}';
-            const DATABASE_KEY = '{{database_key}}';
-            const POD_URL = '{{pod_url}}';
+        const POD_URL = '{{pod_url}}';
+        const OWNER_KEY = '{{owner_key}}';
+        const DATABASE_KEY = '{{database_key}}';
+        const EXTERNAL_ID = "ilya-radinsky-5a60b870";
 
-            const podData = await fetch(`${POD_URL}/v4/${OWNER_KEY}/search`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    "auth": {
-                        "type": "ClientAuth",
-                        "databaseKey": DATABASE_KEY
-                    },
-                    "payload": {
-                        "externalId": "ilya-radinsky-5a60b870",
-                        "type": "LinkedInAccount",
-                        "deleted": false,
-                        "[[edges]]": {}
-                    }
-                }),
-            });
-
-            return podData;
-        };
-
-        getPodData().then((data) => {
+        getLinks(POD_URL, OWNER_KEY, DATABASE_KEY, EXTERNAL_ID).then((data) => {
             console.log('podData', data);
         });
 
