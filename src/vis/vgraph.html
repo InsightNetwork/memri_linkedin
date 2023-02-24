@@ -20,7 +20,7 @@
     <div id="3d-graph" />
 
     <script type="module">
-        import { getOwnerProfile } from './pod.js';
+        import { getOwnerGraph } from './pod.js';
 
         function color_me(node) {
             const min_luminence = 0.6,
@@ -42,12 +42,7 @@
         const OWNER_KEY = '{{owner_key}}';
         const DATABASE_KEY = '{{database_key}}';
 
-        getOwnerProfile(POD_URL, OWNER_KEY, DATABASE_KEY, true).then((data) => {
-            console.log('podData', data);
-        });
-
-        fetch('graph')
-            .then(response => response.json())
+        getOwnerGraph(POD_URL, OWNER_KEY, DATABASE_KEY)
             .then(json => {
                 gData = json;
                 console.log('gData', gData)

@@ -1,16 +1,16 @@
-export const getOwnerProfile = async (pod_url, owner_key, database_key, include_links) => {
+export const getOwnerProfile = async (podUrl, ownerKey, databaseKey, includeLinks) => {
     const payload = {
-        "isMe": true,
-        "type": "LinkedInAccount",
-        "deleted": false,
+        isMe: true,
+        type: "LinkedInAccount",
+        deleted: false,
     };
 
-    if (include_links) {
+    if (includeLinks) {
         payload["[[edges]]"] = {};
         payload["~[[edges]]"] = {};
     }
 
-    const response = await fetch(`${pod_url}/v4/${owner_key}/search`, {
+    const response = await fetch(`${podUrl}/v4/${ownerKey}/search`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -18,13 +18,43 @@ export const getOwnerProfile = async (pod_url, owner_key, database_key, include_
         body: JSON.stringify({
             auth: {
                 type: "ClientAuth",
-                databaseKey: database_key
+                databaseKey,
             },
-            payload: payload
+            payload,
         }),
     });
 
     const podData = await response.json();
 
     return podData[0];
+};
+
+export const getOwnerGraph = async (podUrl, ownerKey, databaseKey) => {
+    let nodes = [];
+    let links = [];
+
+    const ownerData = await getOwnerProfile(podUrl, ownerKey, databaseKey, true);
+
+    if (ownerData) {
+        const edges = ownerData["[[edges]]"] || [];
+        const owner = { ...ownerData };
+        delete owner["[[edges]]"];
+        delete owner["~[[edges]]"];
+
+        nodes = [
+            owner,
+            ...edges.map(v => v._item),
+        ];
+
+        links = edges.map(v => ({
+            source: owner.id,
+            target: v._item.id,
+            type: v._edge,
+        }));
+    }
+
+    return {
+        links,
+        nodes,
+    }
 };
