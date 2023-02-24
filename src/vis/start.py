@@ -162,22 +162,24 @@ async def collect_connections(request: Request):
     if session_id:
         linkedin.driver.session_id = session_id
 
-    connections = linkedin.get_my_connections()
-
     owner = graph.get_owner()
-    graph.create_connections(
-        owner=owner,
-        connections=[
-            LinkedInAccount(
-                externalId=i["profile_id"],
-                handle=i["profile_id"],
-                displayName=i["profile_name"],
-                description=i.get("profile_occupation"),
-                locationName=i.get("profile_location"),
-                avatarUrl=i.get("profile_img"),
-            ) for i in connections
-        ]
-    )
+
+    def page_callback(page_data):
+        graph.create_connections(
+            owner=owner,
+            connections=[
+                LinkedInAccount(
+                    externalId=i["profile_id"],
+                    handle=i["profile_id"],
+                    displayName=i["profile_name"],
+                    description=i.get("profile_occupation"),
+                    locationName=i.get("profile_location"),
+                    avatarUrl=i.get("profile_img"),
+                ) for i in page_data
+            ]
+        )
+
+    connections = linkedin.get_my_connections(page_callback)
 
     data = {
         'session': linkedin.driver.session_id,

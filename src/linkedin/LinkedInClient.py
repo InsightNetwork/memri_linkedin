@@ -105,13 +105,14 @@ class LinkedInClient:
             return False
         return True
 
-    def get_my_connections(self):
+    def get_my_connections(self, page_callback):
         self.go_to_my_connections()
 
         total_connections = self.get_total_connections()
         logging.info(f"Total connections: {total_connections}")
 
         found_connections = self.get_connections()
+        page_callback(found_connections)
 
         while len(found_connections) < total_connections:
             self.simulate_press_end()
@@ -121,7 +122,9 @@ class LinkedInClient:
                 break
 
             self.simulate_pause(1, 3)
-            found_connections = found_connections + self.get_connections()
+            page_connections = self.get_connections()
+            page_callback(page_connections)
+            found_connections = found_connections + page_connections
 
         logging.info(f"Found connections: {len(found_connections)}")
 
