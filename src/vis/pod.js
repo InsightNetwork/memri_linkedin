@@ -1,4 +1,4 @@
-const getLinks = async (pod_url, owner_key, database_key, external_id) => {
+export const getLinks = async (pod_url, owner_key, database_key, external_id) => {
     const response = await fetch(`${pod_url}/v4/${owner_key}/search`, {
         method: 'POST',
         headers: {

@@ -12,7 +12,6 @@
     <script src="//unpkg.com/3d-force-graph"></script>
     <script src="//unpkg.com/three-spritetext"></script>
     <script src="./utils.js"></script>
-    <script src="./pod.js"></script>
 </head>
 
 
@@ -21,6 +20,8 @@
     <div id="3d-graph" />
 
     <script type="module">
+        import { getLinks } from './pod.js';
+
         function color_me(node) {
             const min_luminence = 0.6,
                 min_saturation = 0.6,
