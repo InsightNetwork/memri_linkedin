@@ -61,13 +61,41 @@ async def get_graph(request: Request):
 
 
 async def get_profile(request: Request):
-    params = request.query_params
+    profile = graph.get_owner()
+
+    data = {
+        'profile': profile.to_json(),
+        'session': linkedin.driver.session_id,
+    }
+
+    return JSONResponse(data)
+
+
+async def create_profile(request: Request):
+    params = await request.json()
     session_id = params.get("session")
+    session_login = params.get("session_login")
+    session_password = params.get("session_password")
 
-    if session_id:
-        linkedin.driver.session_id = session_id
+    profile = graph.get_owner()
 
-    profile = linkedin.get_my_profile()
+    if profile:
+        profile = profile.to_json()
+    else:
+        if session_id:
+            linkedin.driver.session_id = session_id
+
+        profile = linkedin.get_my_profile()
+
+        graph.create_owner(LinkedInAccount(
+            externalId=profile["handle"],
+            handle=profile["handle"],
+            displayName=profile["displayName"],
+            description=profile.get("description"),
+            isMe=True,
+            authEmail=session_login,
+            secret=session_password
+        ))
 
     data = {
         'profile': profile,
@@ -126,7 +154,6 @@ async def session_pin(request: Request):
 
 async def collect_connections(request: Request):
     params = await request.json()
-    profile = params.get("profile")
     session_id = params.get("session")
 
     if session_id:
@@ -134,14 +161,9 @@ async def collect_connections(request: Request):
 
     connections = linkedin.get_my_connections()
 
+    owner = graph.get_owner()
     graph.create_connections(
-        owner=LinkedInAccount(
-            externalId=profile["handle"],
-            handle=profile["handle"],
-            displayName=profile["displayName"],
-            description=profile.get("description"),
-            isMe=True,
-        ),
+        owner=owner,
         connections=[
             LinkedInAccount(
                 externalId=i["profile_id"],
@@ -174,6 +196,7 @@ app = Starlette(
         Route('/session/pin', session_pin, methods=['PUT']),
         Route('/connections', collect_connections, methods=['POST']),
         Route('/profile', get_profile, methods=['GET']),
+        Route('/profile', create_profile, methods=['POST']),
         Route('/graph', get_graph, methods=['GET']),
         Route('/vgraph', get_vgraph, methods=['GET']),
         Route('/', get_index, methods=['GET']),

@@ -44,9 +44,7 @@
             `;
         };
 
-        const SignInForm = ({ onSignedIn, session }) => {
-            const [login, setLogin] = useState("");
-            const [password, setPassword] = useState("");
+        const SignInForm = ({ login, onSignedIn, password, session, setLogin, setPassword }) => {
             const [isFetching, setIsFetching] = useState(false);
 
             const onSignIn = async () => {
@@ -159,10 +157,22 @@
         }
 
 
-        const LoggedInForm = ({ onProfileFetched, session }) => {
+        const LoggedInForm = ({ login, onProfileFetched, password, session }) => {
             useEffect(async () => {
-                const response = await fetch(`profile?session=${session}`);
+                const response = await fetch('profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        session,
+                        session_login: login,
+                        session_password: password,
+                    }),
+                });
+
                 const data = await response.json();
+
                 onProfileFetched(data);
             }, []);
 
@@ -241,6 +251,8 @@
             const [sessionId, setSessionId] = useState("");
             const [profile, setProfile] = useState({});
             const [connections, setConnections] = useState({});
+            const [login, setLogin] = useState("");
+            const [password, setPassword] = useState("");
 
             const onSessionCreated = useCallback(({ session, password_enabled }) => {
                 setSessionId(session);
@@ -275,7 +287,7 @@
 
             if (state === STATE_SIGN_IN) {
                 return html`
-                    <${SignInForm} onSignedIn=${onSignedIn} session=${sessionId} />
+                    <${SignInForm} login=${login} onSignedIn=${onSignedIn} password=${password} session=${sessionId} setLogin=${setLogin} setPassword=${setPassword} />
                 `;
             } else if (state === STATE_ENTER_PIN) {
                 return html`
@@ -283,7 +295,7 @@
                 `;
             } else if (state === STATE_LOGGED_IN) {
                 return html`
-                    <${LoggedInForm} onProfileFetched=${onProfileFetched} session=${sessionId} />
+                    <${LoggedInForm} login=${login} onProfileFetched=${onProfileFetched} password=${password} session=${sessionId} />
                 `;
             } else if (state === STATE_PROFILE) {
                 return html`

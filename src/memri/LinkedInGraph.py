@@ -70,3 +70,18 @@ class LinkedInGraph(MemriGraph):
                 ))
 
         return links
+
+    def get_owner(self) -> LinkedInAccount:
+        result = self.client.search(
+            {
+                "isMe": True,
+                "type": "LinkedInAccount",
+                "deleted": False,
+            },
+            include_edges=False,
+        )
+
+        return result[0] if result else None
+
+    def create_owner(self, owner: LinkedInAccount):
+        self.client.create_if_external_id_not_exists(owner)
