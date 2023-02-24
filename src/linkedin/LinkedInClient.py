@@ -134,9 +134,24 @@ class LinkedInClient:
         self.simulate_pause(1, 5)
 
     def get_total_connections(self):
-        container = self.driver.find_element(By.CLASS_NAME, "search-results-container")
-        text = container.find_element(By.CSS_SELECTOR, "h2").text.strip()
-        return int(text.split(" ")[0].replace(",", ""))
+        try:
+            container = None
+            counter = 0
+            while counter < 3 and not container:
+                try:
+                    container = self.driver.find_element(By.CLASS_NAME, "search-results-container")
+                except:
+                    self.simulate_pause(5, 10)
+                counter = counter + 1
+
+            if not container:
+                raise
+
+            text = container.find_element(By.CSS_SELECTOR, "h2").text.strip()
+            return int(text.split(" ")[0].replace(",", ""))
+        except Exception as e:
+            logging.error(f"Getting total connections: {e}")
+            return 0
 
     def get_connections(self):
         profiles = []
