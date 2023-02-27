@@ -2,6 +2,7 @@ from memri.LinkedInGraph import LinkedInGraph
 from memri.schema import LinkedInAccount
 from pymemri.plugin.pluginbase import PluginBase
 from pymemri.webserver.public_api import register_endpoint
+from starlette.responses import JSONResponse
 
 
 class LinkedinPlugin(PluginBase):
@@ -27,7 +28,7 @@ class LinkedinPlugin(PluginBase):
             "links": [{"source": i.source.id, "target": i.target.id, "type": i.name} for i in links],
         }
 
-        return data
+        return JSONResponse(data)
 
 
 if __name__ == '__main__':
