@@ -17,6 +17,18 @@ class LinkedinPlugin(PluginBase):
     def run(self):
         pass
 
+    @register_endpoint("/v1/graph", "GET")
+    def get_graph(self):
+        accounts = self.graph.get_accounts()
+        links = self.graph.get_links(accounts)
+
+        data = {
+            "nodes": [i.to_json() for i in accounts],
+            "links": [{"source": i.source.id, "target": i.target.id, "type": i.name} for i in links],
+        }
+
+        return data
+
 
 if __name__ == '__main__':
     from pymemri.pod.client import PodClient
@@ -37,4 +49,5 @@ if __name__ == '__main__':
     )
 
     plugin = LinkedinPlugin(client=client)
+    plugin.add_to_schema()
     plugin._run()
