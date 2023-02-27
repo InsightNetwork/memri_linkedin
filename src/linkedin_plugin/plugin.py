@@ -1,7 +1,7 @@
-from pymemri.plugin.pluginbase import PluginBase
-from pymemri.pod.client import PodClient
-from pymemri.webserver.public_api import register_endpoint
+from memri.LinkedInGraph import LinkedInGraph
 from memri.schema import LinkedInAccount
+from pymemri.plugin.pluginbase import PluginBase
+from pymemri.webserver.public_api import register_endpoint
 
 
 class LinkedinPlugin(PluginBase):
@@ -9,8 +9,9 @@ class LinkedinPlugin(PluginBase):
         LinkedInAccount,
     ]
 
-    def __init__(self, client: PodClient, *args, **kwargs) -> None:
-        super().__init__(*args, client=client, **kwargs)
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.graph = LinkedInGraph(client=self.client)
         self.daemon = True
 
     def run(self):
@@ -18,9 +19,9 @@ class LinkedinPlugin(PluginBase):
 
 
 if __name__ == '__main__':
-    import os
+    from pymemri.pod.client import PodClient
     from starlette.config import Config
-    from memri.LinkedInGraph import LinkedInGraph
+    import os
 
     ROOT = os.path.dirname(__file__)
 
@@ -29,11 +30,11 @@ if __name__ == '__main__':
     OWNER_KEY = config('VIS_OWNER_KEY', cast=str)
     DATABASE_KEY = config('VIS_DATABASE_KEY', cast=str)
 
-    graph = LinkedInGraph(
+    client = PodClient(
         owner_key=OWNER_KEY,
         database_key=DATABASE_KEY,
-        create_account=True)
+        create_account=True,
+    )
 
-    plugin = LinkedinPlugin(graph.client)
-
+    plugin = LinkedinPlugin(client=client)
     plugin._run()
