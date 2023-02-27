@@ -138,18 +138,7 @@ class LinkedInClient:
 
     def get_total_connections(self):
         try:
-            container = None
-            counter = 0
-            while counter < 3 and not container:
-                try:
-                    container = self.driver.find_element(By.CLASS_NAME, "search-results-container")
-                except:
-                    self.simulate_pause(5, 10)
-                counter = counter + 1
-
-            if not container:
-                raise
-
+            container = self.try_to_get(By.CLASS_NAME, "search-results-container")
             text = container.find_element(By.CSS_SELECTOR, "h2").text.strip()
             return int(text.split(" ")[0].replace(",", ""))
         except Exception as e:
@@ -159,18 +148,7 @@ class LinkedInClient:
     def get_connections(self):
         profiles = []
         try:
-            container = None
-            counter = 0
-            while counter < 3 and not container:
-                try:
-                    container = self.driver.find_element(By.CLASS_NAME, "search-results-container")
-                except:
-                    self.simulate_pause(5, 10)
-                counter = counter + 1
-
-            if not container:
-                raise
-
+            container = self.try_to_get(By.CLASS_NAME, "search-results-container")
             connections = container.find_elements(By.CLASS_NAME, "entity-result__item")
             for conn in connections:
                 container = conn.find_element(By.CLASS_NAME, "entity-result__universal-image")
@@ -224,10 +202,25 @@ class LinkedInClient:
             logging.error(f"Getting connections: {e}")
         return profiles
 
+    def try_to_get(self, by, path, max_counts=3, min_pause=5, max_pause=10):
+        container = None
+        counter = 0
+        while counter < max_counts and not container:
+            try:
+                container = self.driver.find_element(by, path)
+            except:
+                self.simulate_pause(min_pause, max_pause)
+            counter = counter + 1
+
+        if not container:
+            raise
+
+        return container
+
     def get_my_profile(self):
         profile = {}
         try:
-            profile_block = self.driver.find_element(By.CLASS_NAME, "feed-identity-module__actor-meta")
+            profile_block = self.try_to_get(By.CLASS_NAME, "feed-identity-module__actor-meta")
             handle = profile_block.find_element(By.XPATH, "a").get_attribute("href").strip('/').split('/')[-1]
             displayName = profile_block.find_element(By.XPATH, "a/div[2]").get_attribute("innerHTML").strip()
             description = profile_block.find_element(By.XPATH, "p").get_attribute("innerHTML").strip()
