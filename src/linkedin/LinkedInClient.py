@@ -11,7 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from user_agent import generate_user_agent
-import time
+import time, pprint, re
 from typing import Any, Dict
 
 
@@ -28,7 +28,7 @@ default_capabilities = {
 class LinkedInClient:
     def __init__(self, log: Any = logging):
         options = Options()
-        options.add_argument("--headless")
+        # options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-extensions")
@@ -72,6 +72,19 @@ class LinkedInClient:
             pin
         )
         self.driver.find_element(By.ID, "two-step-submit-button").click()
+    
+    def try_until_success(self, func, **kwargs):
+        sleep = kwargs.get('sleep') or 3
+        success = False
+        while not success:
+            try:
+                result = func(**kwargs)
+                # input(f'Try got result {result}, {type(result)}')
+                success = True if result else False
+            except Exception as error:
+                print(f'Error trying function {func} : {error}')
+            time.sleep(sleep)
+        return result
 
     def goto_main_page(self):
         self.driver.get("https://www.linkedin.com/")
@@ -104,8 +117,39 @@ class LinkedInClient:
         except:
             return False
         return True
-
+    
     def get_my_connections(self, page_callback):
+        self.go_to_my_connections()
+
+        # total_connections = self.get_total_connections()
+        # logging.info(f"Total connections: {total_connections}")
+        pages, next_button = self.try_until_success(self.get_all_pagebuttons)
+        toppage = int(pages[-1].text)
+        logging.warning(f'Total pages {toppage}')
+        found_connections = []
+        page_num = 1
+        while page_num < toppage: # 
+            logging.info('Working on page %s'%(page_num))
+            buttons = [btn for btn in pages if int(btn.text) == page_num]
+            button = buttons[0] if buttons else None
+            toclick = button or next_button
+            if toclick:
+                toclick.click()
+                self.simulate_pause(4, 5)
+                logging.warning('before get connections')
+                page_connections = self.get_connections()
+                logging.warning('page connections %s'%pprint.pformat(page_connections))
+                # page_callback(page_connections)
+                found_connections = found_connections + page_connections
+                logging.warning(f'Total connections {len(found_connections)} ')
+            page_num += 1
+            pages, next_button = self.try_until_success(self.get_all_pagebuttons) # get again because ellipsis
+
+        logging.info(f"Found connections: {len(found_connections)}")
+
+        return found_connections
+
+    def get_my_connections0(self, page_callback):
         self.go_to_my_connections()
 
         total_connections = self.get_total_connections()
@@ -155,6 +199,16 @@ class LinkedInClient:
         except Exception as e:
             logging.error(f"Getting total connections: {e}")
             return 0
+
+    def get_all_pagebuttons(self):
+        buttons = self.driver.find_elements(By.CSS_SELECTOR, 'li button')
+        logging.info('found %s buttons'%(len(buttons)))
+        tester = re.compile("^[0-9]+$")
+        pages = [btn for btn in buttons if tester.findall(btn.text.strip())]
+        next = [btn for btn in buttons if btn.text.strip().lower() == 'next']
+        pages = pages if len(pages) > 0 else None
+        next = next[0] if next else None
+        return pages, next if pages and next else None
 
     def get_connections(self):
         profiles = []
@@ -224,25 +278,36 @@ class LinkedInClient:
             logging.error(f"Getting connections: {e}")
         return profiles
 
-    def get_my_profile(self):
+    def get_my_profile(self, **kwargs):
         profile = {}
         try:
             profile_block = self.driver.find_element(By.CLASS_NAME, "feed-identity-module__actor-meta")
             handle = profile_block.find_element(By.XPATH, "a").get_attribute("href").strip('/').split('/')[-1]
             displayName = profile_block.find_element(By.XPATH, "a/div[2]").get_attribute("innerHTML").strip()
-            description = profile_block.find_element(By.XPATH, "p").get_attribute("innerHTML").strip()
-
+            
             profile = {
                 'handle': handle,
                 'displayName': displayName,
-                'description': description,
             }
         except Exception as e:
             logging.error(f"Getting profile: {e}")
 
+        if profile and handle:
+            try:
+                description = profile_block.find_element(By.XPATH, "p").get_attribute("innerHTML").strip()
+                if description:
+                    profile['desscription'] = description
+            except Exception as error:
+                logging.warning('No description: %s'%(error))
         logging.info(f"Found profile: {str(profile)}")
 
         return profile
+
+    def test_loop(self, test, **kwargs):
+        print('testing input', test)
+        result = input('please type %s'%test)
+        print('true? ', True if result else False)
+        return True if result == 'ok' else False
 
 
 def main(log_level="INFO"):
@@ -257,7 +322,6 @@ def main(log_level="INFO"):
     client.simulate_pause(2, 3)
     client.get_my_profile()
     #client.get_my_connections()
-
 
 if __name__ == "__main__":
     main()

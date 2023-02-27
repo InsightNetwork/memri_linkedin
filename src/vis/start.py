@@ -85,8 +85,8 @@ async def create_profile(request: Request):
         if session_id:
             linkedin.driver.session_id = session_id
 
-        profile = linkedin.get_my_profile()
-
+        profile = linkedin.try_until_success(linkedin.get_my_profile, sleep=2)
+        
         graph.create_owner(LinkedInAccount(
             externalId=profile["handle"],
             handle=profile["handle"],
@@ -106,6 +106,7 @@ async def create_profile(request: Request):
 
 
 async def create_session(request: Request):
+    # linkedin.try_until_success(linkedin.test_loop, sleep=2, test='test') # test try looop
     linkedin.goto_main_page()
 
     owner = graph.get_owner()
