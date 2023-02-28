@@ -3,11 +3,12 @@ from pymemri.pod.client import PodClient
 
 class MemriGraph:
     def __init__(self, owner_key: str = None, database_key: str = None,
-                 create_account: bool = True) -> None:
+                 create_account: bool = True, client: PodClient = None) -> None:
         self._client = None
         self._owner_key = owner_key
         self._database_key = database_key
         self._create_account = create_account
+        self._client = client
 
     def setup_schema(self) -> None:
         pass

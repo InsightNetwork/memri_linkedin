@@ -106,9 +106,13 @@ async def create_profile(request: Request):
 
 
 async def create_session(request: Request):
-    # linkedin.try_until_success(linkedin.test_loop, sleep=2, test='test') # test try looop
+    
     linkedin.goto_main_page()
-
+    if False: # testing without logging in
+        # linkedin.try_until_success(linkedin.test_loop, sleep=2, test='test') # test try looop
+        result = linkedin.test_selector(method='xpath') # test try looop
+        print('RESULT', result)
+    
     owner = graph.get_owner()
 
     data = {

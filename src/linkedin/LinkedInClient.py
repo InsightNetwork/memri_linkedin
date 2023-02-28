@@ -80,16 +80,42 @@ class LinkedInClient:
             try:
                 result = func(**kwargs)
                 # input(f'Try got result {result}, {type(result)}')
-                success = True if result else False
+
+                success = True if all(result) else False
             except Exception as error:
-                print(f'Error trying function {func} : {error}')
+                logging.warning(f'Error trying function {func} : {error}')
             time.sleep(sleep)
         return result
 
+    def test_selector(self, method='css'):
+        """This is for looping and testing various selectors until satisfied
+        Usage:
+            result = self.test_selector(method='xpath') # try different selectors and methods
+        When satisfied:
+            result = self.driver.find_element(methods[method], <successful selector>")"""
+        success = False
+        result = None
+        methods = {'xpath': By.XPATH, 'x':  By.XPATH, 'css': By.CSS_SELECTOR, 'c': By.CSS_SELECTOR }
+        while not success:
+            try:
+                # print(f'URL {self.driver.current_url}')
+                selectr = input('selector?')
+                if selectr == 'q':
+                    success = True
+                    return result
+                elif selectr.find('method') == 0:
+                    method = selectr.rpartition(' ')[-1]
+                else:
+                    result = self.driver.find_element(methods.get(method), selectr)
+                    print(f'result {result}, {result.text} , {result.get_attribute("innerHTML").strip()} ')
+                    logging.error(f'result {result}, {result.text} , {result.get_attribute("innerHTML").strip()} ')
+            except Exception as error:
+                logging.error(f'Error {error}')
+
     def goto_main_page(self):
         self.driver.get("https://www.linkedin.com/")
-        self.driver.set_window_size(1428, 755)
-
+        self.driver.set_window_size(1200, 500)
+        
     def login(self, use_verification_pin=True):
         email = input("Email: ")
         password = getpass.getpass("Password: ")
@@ -119,33 +145,42 @@ class LinkedInClient:
         return True
     
     def get_my_connections(self, page_callback):
-        self.go_to_my_connections()
-
-        # total_connections = self.get_total_connections()
-        # logging.info(f"Total connections: {total_connections}")
+        page_num = int(input('start page') or 1)
+        self.go_to_my_connections(start_page=page_num)
         pages, next_button = self.try_until_success(self.get_all_pagebuttons)
         toppage = int(pages[-1].text)
         logging.warning(f'Total pages {toppage}')
         found_connections = []
-        page_num = 1
-        while page_num < toppage: # 
-            logging.info('Working on page %s'%(page_num))
+       
+        while page_num <= toppage: 
+            # get connections from current page
+            page_connections = self.get_connections()
+            logging.warning('page %s connections %s '%(page_num, len(page_connections)))
+            page_callback(page_connections)
+            found_connections = found_connections + page_connections
+            logging.warning(f'Total connections {len(found_connections)} ')
+            # now click the next button
             buttons = [btn for btn in pages if int(btn.text) == page_num]
-            button = buttons[0] if buttons else None
-            toclick = button or next_button
+            button = buttons[0] if buttons and len(buttons) > 0 else None
+            toclick =  next_button
+            disabled = toclick.disabled if toclick and hasattr(toclick, 'disabled') else None
+            logging.warning('Working on page %s %s disabled %s'%(page_num, next_button, disabled))
+            if disabled:
+                logging.warning('Disabled, breaking')
+                break
             if toclick:
                 toclick.click()
-                self.simulate_pause(4, 5)
-                logging.warning('before get connections')
-                page_connections = self.get_connections()
-                logging.warning('page connections %s'%pprint.pformat(page_connections))
-                # page_callback(page_connections)
-                found_connections = found_connections + page_connections
-                logging.warning(f'Total connections {len(found_connections)} ')
-            page_num += 1
-            pages, next_button = self.try_until_success(self.get_all_pagebuttons) # get again because ellipsis
+                self.simulate_pause(2, 3)
+                page_num += 1
+                pages, next_button = self.try_until_success(self.get_all_pagebuttons) # get again because ellipsis
+                if page_num%5 == 1:
+                    y = input(f'Have {len(found_connections)}, page {page_num}. Continue?')
+                    if y == 'q':
+                        break
+            else:
+                break
 
-        logging.info(f"Found connections: {len(found_connections)}")
+        logging.debug(f"Found connections: {len(found_connections)}")
 
         return found_connections
 
@@ -153,7 +188,7 @@ class LinkedInClient:
         self.go_to_my_connections()
 
         total_connections = self.get_total_connections()
-        logging.info(f"Total connections: {total_connections}")
+        logging.debug(f"Total connections: {total_connections}")
 
         found_connections = self.get_connections()
         page_callback(found_connections)
@@ -170,30 +205,20 @@ class LinkedInClient:
             page_callback(page_connections)
             found_connections = found_connections + page_connections
 
-        logging.info(f"Found connections: {len(found_connections)}")
+        logging.debug(f"Found connections: {len(found_connections)}")
 
         return found_connections
 
-    def go_to_my_connections(self):
+    def go_to_my_connections(self, start_page=1):
         self.driver.get(
-            "https://www.linkedin.com/search/results/people/?network=%5B%22F%22%5D&origin=MEMBER_PROFILE_CANNED_SEARCH&sid=~ea"
+            f"https://www.linkedin.com/search/results/people/?network=%5B%22F%22%5D&origin=MEMBER_PROFILE_CANNED_SEARCH&page={start_page}"
         )
-        self.simulate_pause(1, 5)
+        self.driver.set_window_size(700, 1200)
+        self.simulate_pause(5, 5)
 
     def get_total_connections(self):
         try:
-            container = None
-            counter = 0
-            while counter < 3 and not container:
-                try:
-                    container = self.driver.find_element(By.CLASS_NAME, "search-results-container")
-                except:
-                    self.simulate_pause(5, 10)
-                counter = counter + 1
-
-            if not container:
-                raise
-
+            container = self.try_to_get(By.CLASS_NAME, "search-results-container")
             text = container.find_element(By.CSS_SELECTOR, "h2").text.strip()
             return int(text.split(" ")[0].replace(",", ""))
         except Exception as e:
@@ -201,30 +226,22 @@ class LinkedInClient:
             return 0
 
     def get_all_pagebuttons(self):
+        self.driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
+        time.sleep(3)
         buttons = self.driver.find_elements(By.CSS_SELECTOR, 'li button')
-        logging.info('found %s buttons'%(len(buttons)))
+        logging.debug('found %s buttons'%(len(buttons)))
         tester = re.compile("^[0-9]+$")
         pages = [btn for btn in buttons if tester.findall(btn.text.strip())]
-        next = [btn for btn in buttons if btn.text.strip().lower() == 'next']
+        # next = self.test_selector(method='xpath') # //button/span[contains(.,'Next')]
+        next = self.driver.find_element(By.XPATH, "//button/span[contains(.,'Next')]")
         pages = pages if len(pages) > 0 else None
-        next = next[0] if next else None
-        return pages, next if pages and next else None
+        print('found %s pages and next= %s'%(len(pages), type(next)))
+        return pages, next
 
     def get_connections(self):
         profiles = []
         try:
-            container = None
-            counter = 0
-            while counter < 3 and not container:
-                try:
-                    container = self.driver.find_element(By.CLASS_NAME, "search-results-container")
-                except:
-                    self.simulate_pause(5, 10)
-                counter = counter + 1
-
-            if not container:
-                raise
-
+            container = self.try_to_get(By.CLASS_NAME, "search-results-container")
             connections = container.find_elements(By.CLASS_NAME, "entity-result__item")
             for conn in connections:
                 container = conn.find_element(By.CLASS_NAME, "entity-result__universal-image")
@@ -278,10 +295,25 @@ class LinkedInClient:
             logging.error(f"Getting connections: {e}")
         return profiles
 
-    def get_my_profile(self, **kwargs):
+    def try_to_get(self, by, path, max_counts=3, min_pause=5, max_pause=10):
+        container = None
+        counter = 0
+        while counter < max_counts and not container:
+            try:
+                container = self.driver.find_element(by, path)
+            except:
+                self.simulate_pause(min_pause, max_pause)
+            counter = counter + 1
+
+        if not container:
+            raise
+
+        return container
+
+    def get_my_profile(self):
         profile = {}
         try:
-            profile_block = self.driver.find_element(By.CLASS_NAME, "feed-identity-module__actor-meta")
+            profile_block = self.try_to_get(By.CLASS_NAME, "feed-identity-module__actor-meta")
             handle = profile_block.find_element(By.XPATH, "a").get_attribute("href").strip('/').split('/')[-1]
             displayName = profile_block.find_element(By.XPATH, "a/div[2]").get_attribute("innerHTML").strip()
             
@@ -299,7 +331,7 @@ class LinkedInClient:
                     profile['desscription'] = description
             except Exception as error:
                 logging.warning('No description: %s'%(error))
-        logging.info(f"Found profile: {str(profile)}")
+        logging.debug(f"Found profile: {str(profile)}")
 
         return profile
 
