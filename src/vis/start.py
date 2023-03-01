@@ -67,7 +67,6 @@ async def get_profile(request: Request):
         'profile': profile.to_json(),
         'session': linkedin.driver.session_id,
     }
-
     return JSONResponse(data)
 
 
@@ -78,15 +77,17 @@ async def create_profile(request: Request):
     session_password = params.get("session_password")
 
     profile = graph.get_owner()
+    refresh = input('refresh profile?')
 
-    if profile:
+    if profile and not refresh:
         profile = profile.to_json()
     else:
         if session_id:
             linkedin.driver.session_id = session_id
 
-        profile = linkedin.try_until_success(linkedin.get_my_profile, sleep=2)
-        
+        linkedin.goto_profile_page()
+        profile = linkedin.try_until_success(linkedin.get_full_profile)
+        print('after get profile', profile)
         graph.create_owner(LinkedInAccount(
             externalId=profile["handle"],
             handle=profile["handle"],

@@ -75,8 +75,10 @@ class LinkedInClient:
     
     def try_until_success(self, func, **kwargs):
         sleep = kwargs.get('sleep') or 3
+        max_tries = kwargs.get('max_tries')
         success = False
-        while not success:
+        tries = 0
+        while not success and (not max_tries or tries < max_tries) :
             try:
                 result = func(**kwargs)
                 # input(f'Try got result {result}, {type(result)}')
@@ -85,9 +87,10 @@ class LinkedInClient:
             except Exception as error:
                 logging.warning(f'Error trying function {func} : {error}')
             time.sleep(sleep)
+            tries += 1
         return result
 
-    def test_selector(self, method='css'):
+    def test_selector(self, method='css', prompt='', container=None, multiple=False):
         """This is for looping and testing various selectors until satisfied
         Usage:
             result = self.test_selector(method='xpath') # try different selectors and methods
@@ -96,17 +99,25 @@ class LinkedInClient:
         success = False
         result = None
         methods = {'xpath': By.XPATH, 'x':  By.XPATH, 'css': By.CSS_SELECTOR, 'c': By.CSS_SELECTOR }
+        caller = container or self.driver
+        print('caller', caller)
         while not success:
             try:
                 # print(f'URL {self.driver.current_url}')
-                selectr = input('selector?')
+                selectr = input(prompt +' selector?')
                 if selectr == 'q':
                     success = True
                     return result
                 elif selectr.find('method') == 0:
                     method = selectr.rpartition(' ')[-1]
+                elif multiple:
+                    result = caller.find_elements(methods.get(method), selectr)
+                    if result and len(result) > 0:
+                        for i, one in enumerate(result):
+                            print(f'{i}. {one}, {one.text} , {one.get_attribute("innerHTML").strip()} ')
+                            # logging.error(f'result {one}, {one.text} , {one.get_attribute("innerHTML").strip()} ')
                 else:
-                    result = self.driver.find_element(methods.get(method), selectr)
+                    result = caller.find_element(methods.get(method), selectr)
                     print(f'result {result}, {result.text} , {result.get_attribute("innerHTML").strip()} ')
                     logging.error(f'result {result}, {result.text} , {result.get_attribute("innerHTML").strip()} ')
             except Exception as error:
@@ -115,6 +126,13 @@ class LinkedInClient:
     def goto_main_page(self):
         self.driver.get("https://www.linkedin.com/")
         self.driver.set_window_size(1200, 500)
+
+    def goto_profile_page(self):
+        self.driver.get("https://www.linkedin.com/in/me")
+        self.driver.set_window_size(1200, 500)
+        time.sleep(2)
+        self.driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
+        time.sleep(3)
         
     def login(self, use_verification_pin=True):
         email = input("Email: ")
@@ -147,7 +165,7 @@ class LinkedInClient:
     def get_my_connections(self, page_callback):
         page_num = int(input('start page') or 1)
         self.go_to_my_connections(start_page=page_num)
-        pages, next_button = self.try_until_success(self.get_all_pagebuttons)
+        pages, next_button = self.try_until_success(self.get_all_pagebuttons, max_tries = 5)
         toppage = int(pages[-1].text)
         logging.warning(f'Total pages {toppage}')
         found_connections = []
@@ -172,7 +190,7 @@ class LinkedInClient:
                 toclick.click()
                 self.simulate_pause(2, 3)
                 page_num += 1
-                pages, next_button = self.try_until_success(self.get_all_pagebuttons) # get again because ellipsis
+                pages, next_button = self.try_until_success(self.get_all_pagebuttons, max_tries = 5) # get again because ellipsis
                 if page_num%5 == 1:
                     y = input(f'Have {len(found_connections)}, page {page_num}. Continue?')
                     if y == 'q':
@@ -310,6 +328,110 @@ class LinkedInClient:
 
         return container
 
+    def username_from_links(self):
+        """gets all linkedin/in links and takes the most common username among them, presumably the user whose profile it is."""
+        anchors = self.driver.find_elements(By.XPATH, "//main //a") or []
+        logging.warning('Anchors %s'%(len(anchors)))
+        urls = [a.get_attribute("href") for a in anchors]
+        matcher = re.compile('linkedin.com/in/([a-z0-9\-]*)', re.IGNORECASE)
+        them = {}
+        for url in urls:
+            res = matcher.findall(url)
+            if res:
+                nm = res[0].lower()
+                if nm != 'me':
+                    temp = them.setdefault(nm, 0)
+                    them[nm] += 1
+        std = list(them.items())
+        logging.warning('std %s'%(std))
+        std.sort(key=lambda x: -x[1])
+        username = std[0][0]
+        return username
+
+    def get_profile_block(self):
+        selector = 'main#main section > div:nth-child(2) > div:nth-child(2)';
+        container = self.driver.find_element(By.CSS_SELECTOR, selector)
+        return container
+
+    def get_about(self):
+        try:
+            about_section = self.driver.find_element(By.XPATH, "//div[@id='about']/ancestor::section")
+            print('about section', about_section.text)
+            # spans = self.test_selector(method='xpath', prompt='about', container=about_section)
+            spans = about_section.find_element(By.CSS_SELECTOR, 'div:nth-child(3)')
+            return spans.text.strip() 
+        except Exception as error:
+            logging.warning(f'Error getting About section {error} ')
+            return None
+
+
+    def get_description(self):
+        try:
+            block = self.get_profile_block()
+            # div = self.test_selector(method='xpath', prompt='description', container=block)
+            div = block.find_element(By.CSS_SELECTOR, 'div div:nth-child(2)')
+            return div.text.strip()
+        except Exception as error:
+            logging.warning(f'Error getting description {error} ')
+            return None
+
+    def get_location(self):
+        try:
+            block = self.get_profile_block()
+            # div = self.test_selector(method='xpath', prompt='location', container=block)
+            div = block.find_element(By.CSS_SELECTOR, ':scope :nth-child(3) span')
+            return div.text.strip()
+        except Exception as error:
+            logging.warning(f'Error getting location {error} ')
+            return None
+
+    def get_talks_about(self):
+        try:
+            look_for = 'talks about #'
+            block = self.get_profile_block()
+            print('block', block.text)
+            # spans = self.test_selector(method='css', prompt='talks', container=block, multiple=True) or []
+            spans = block.find_elements(By.CSS_SELECTOR, 'span')
+            for span in spans:
+                txt = span.text.lower().strip()
+                if txt.find(look_for) == 0:
+                    print('talks ', txt.replace(look_for, ''))
+                    return txt.replace(look_for, '')
+                    break
+        except Exception as error:
+            logging.warning(f'Error getting "talks about" {error} ')
+        return None
+
+    def get_full_profile(self):
+        profile = {}
+        try:
+            handle = self.username_from_links()
+            print('handle', handle)
+            displayName_cont = self.driver.find_element(By.XPATH, "//main /section //h1")
+            displayName = displayName_cont.text.strip() if displayName_cont else 'Unknown name'
+            print('fname', displayName)
+            description = self.get_description()
+            print('desc', description)
+            location = self.get_location()
+            print('loc', location)
+            about = self.get_about()
+            talks_about = self.get_talks_about()
+
+            profile = {
+                'handle': handle,
+                'displayName': displayName,
+            }
+            if description: profile['description'] = description
+            if location: profile['location'] = location
+            if about: profile['about'] = about
+            if talks_about: profile['talks_about'] = talks_about
+        except Exception as e:
+            logging.error(f"Getting profile: {e}")
+
+        logging.warning(f"Found profile: {str(profile)}")
+        print('returning profile', profile)
+        return profile
+
     def get_my_profile(self):
         profile = {}
         try:
@@ -331,7 +453,7 @@ class LinkedInClient:
                     profile['desscription'] = description
             except Exception as error:
                 logging.warning('No description: %s'%(error))
-        logging.debug(f"Found profile: {str(profile)}")
+        logging.warning(f"Found profile: {str(profile)}")
 
         return profile
 
