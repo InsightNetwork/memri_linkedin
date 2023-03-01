@@ -22,10 +22,11 @@ RUN apt-get install -yqq unzip
 # unzip chromedriver
 RUN unzip /tmp/chromedriver.zip chromedriver -d /usr/local/bin/
 
+WORKDIR /app
 
 COPY ./memri /app/memri
 COPY ./linkedin /app/linkedin
-COPY ./vis /app/vis
+COPY ./linkedin_plugin /app/linkedin_plugin
 
 RUN pip3 install -r /app/memri/requirements.txt
 RUN pip3 install -r /app/linkedin/requirements.txt
@@ -39,5 +40,5 @@ ENV PYTHONPATH=/app
 
 EXPOSE 8080
 
-ENTRYPOINT ["python3", "app/vis/start.py", "serve"]
+CMD ["run_plugin", "--read_args_from_env", "True"]
 

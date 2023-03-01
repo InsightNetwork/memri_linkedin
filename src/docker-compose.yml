@@ -1,0 +1,43 @@
+
+
+version: "3.7"
+services:
+  pod:
+    image: "gitlab.memri.io:5050/memri/pod:${POD_VERSION}"
+    ports:
+      - "3030:3030"
+    networks:
+      memri-net: null
+    hostname: pod
+    restart: always
+    volumes:
+      - ~/data/memri/db:/data/db
+      - ~/data/memri/files:/data/files
+      - ~/data/memri/certs:/data/certs
+      - /var/run/docker.sock:/var/run/docker.sock
+    entrypoint:
+      - "/pod"
+      - "--owners=ANY"
+      # Note that on a real system, you should not use non-https on 0.0.0.0
+      - "--insecure-non-tls=0.0.0.0"
+      - "--plugins-callback-address=http://pod:3030"
+      - "--plugins-docker-network=memri-net"
+
+  linkedin-plugin:
+    image: "memri_linkedin/plugin:1.0"
+    environment:
+      POD_TARGET_ITEM: ${POD_TARGET_ITEM}
+      POD_AUTH_JSON: ${POD_AUTH_JSON}
+      POD_FULL_ADDRESS: http://pod:3030
+    networks:
+      memri-net: null
+    depends_on:
+      pod:
+        condition: service_started
+    ports:
+      - "8080:8080"
+
+
+networks:
+  memri-net:
+    name: memri-net

@@ -1,0 +1,7 @@
+{
+	"containerImage": "localhost:2000/linkedin",
+	"pluginType": "app",
+	"pluginModule": "linkedin_plugin.plugin",
+	"pluginName": "LinkedinPlugin",
+	"status": "not started"
+}
