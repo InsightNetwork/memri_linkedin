@@ -55,14 +55,14 @@ class LinkedInClient:
 
     def is_password_enabled(self):
         try:
-            self.driver.find_element(By.ID, "session_password")
+            self.try_to_get(By.ID, "session_password")
             return True
         except:
             return False
 
     def is_pin_enabled(self):
         try:
-            self.driver.find_element(By.ID, "input__phone_verification_pin")
+            self.try_to_get(By.ID, "input__phone_verification_pin")
             return True
         except:
             return False
