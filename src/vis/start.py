@@ -28,7 +28,6 @@ html_templates = Jinja2Templates(directory=STATIC_ROOT)
 
 graph = LinkedInGraph(owner_key=OWNER_KEY, database_key=DATABASE_KEY,
                       create_account=True)
-graph.setup_schema()
 
 linkedin = LinkedInClient()
 
