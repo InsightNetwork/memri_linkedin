@@ -50,7 +50,7 @@ class LinkedInClient:
         self.driver.find_element(By.ID, "session_password").click()
         self.driver.find_element(By.ID, "session_password").send_keys(password)
         self.driver.find_element(
-            By.CSS_SELECTOR, ".sign-in-form__submit-button"
+            By.CSS_SELECTOR, "button[data-id='sign-in-form__submit-btn']"
         ).click()
 
     def is_password_enabled(self):
